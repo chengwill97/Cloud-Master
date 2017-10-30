@@ -8,7 +8,7 @@ datafile = DataIO()
 data2 = {"hello": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 data2["world"] = "whatsup"
 
-folder = "/Users/WillC/Documents/Rutgers/Research/RADICAL/minionsFiles/output/"
+folder = "/Users/willcheng2/Documents/GitHub/Minions/minionsFiles/output"
 
 startdir = 0
 
@@ -18,7 +18,7 @@ while (os.path.isdir(folder + str(startdir))):
 
 pipe = Pipeline()
 
-folder = "/Users/WillC/Documents/Rutgers/Research/RADICAL/minionsFiles/output/"
+folder = "/Users/willcheng2/Documents/GitHub/Minions/minionsFiles/output"
 
 startdir = 0
 
