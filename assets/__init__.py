@@ -1,35 +1,9 @@
-from dataIO import DataIO
-import datetime
+import dataIO
 import os
-from pipeline import Pipeline
 
-datafile = DataIO()
+cwd = os.getcwd()
+fileJSON = dataIO.DataIO()
+directories = fileJSON.readData(cwd + "/directories.json")
+output = directories["output"]["MBP15"]
 
-data2 = {"hello": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
-data2["world"] = "whatsup"
-
-folder = "/Users/willcheng2/Documents/GitHub/Minions/minionsFiles/output"
-
-startdir = 0
-
-while (os.path.isdir(folder + str(startdir))):
-    startdir += 1
-    print startdir
-
-pipe = Pipeline()
-
-folder = "/Users/willcheng2/Documents/GitHub/Minions/minionsFiles/output"
-
-startdir = 0
-
-while (os.path.isdir(folder+str(startdir))):
-    print os.path.isdir(folder + str(startdir)) + "False"
-    startdir += 1
-
-print os.path.isdir(folder + str(startdir))
-
-pipe.run(folder+str(startdir))
-
-print folder+str(startdir)
-
-#datafile.writeData(folder+str(startdir), data2)
+print "{0}/test{1}".format(output, 1)
