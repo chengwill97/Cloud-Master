@@ -37,18 +37,18 @@ def main():
 
     #run test
 
-    ################################################################################################
 
     # Run strong and weak scaling tests in double loop
     dirnum = 1
     for NUMWORKER in range(NUMWORKERS,NUMWORKERS+1):
 
-        print "starting NUMWORKER {}".format(NUMWORKER)
+        print "starting NUMWORKER 2^{}".format(NUMWORKER)
 
         for NUMTASK in range(NUMTASKS,NUMTASKS+1):
     
-            print "starting NUMTASK {}".format(NUMTASK)
+            print "starting NUMTASK 2^{}".format(NUMTASK)
 
+            ################################################################################################
             starttime = time.time()
 
             sleeptasks = []
@@ -65,7 +65,8 @@ def main():
     
             endtime = time.time()
             tasktime = endtime - starttime
-            
+            ################################################################################################
+
             ##put data into CSV
             with open(CSVFILE, 'a') as datafile:
                 writer = csv.writer(datafile)
