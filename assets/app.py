@@ -33,7 +33,7 @@ def main():
     CSVFILE = outputfolder + "/data{}.csv".format(testnum)
 
     NUMWORKERS   = 2        # up to 2^(NUMWORKERS) of cores to use
-    NUMTASKS     = 8        # up to 2^(NUMSLEEP) of tasks to use
+    NUMTASKS     = 9        # up to 2^(NUMSLEEP) of tasks to use
 
     #run test
 
