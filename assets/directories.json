@@ -1,7 +1,7 @@
 {
 	"output" : {
-		"MBP15" : "/Users/WillC/Documents/Rutgers/Research/RADICAL/Minions/minionsFiles/output",
+		"MBP15" : "/Users/WillC/Documents/Rutgers/Research/RADICAL/Minions/data/output",
 		"MBP11" : "",
-		"ILAB" 	: ""
+		"ILAB" 	: "/ilab/users/wc418/Desktop/Minions-master/data/output"
 	}
 }
