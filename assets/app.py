@@ -12,26 +12,28 @@ import os
 def worker(arg):
     t, pipefolder = arg
 
-    Cnode = ConvergenceNode(sleepparam=t)
-    Anode = AnalysisNode(sleepparam=t)
-    Snode = SimulationNode(sleepparam=t)
-    pipe = Pipeline(simulation=Snode, analysis=Anode, convergence=Cnode)
+    Cnode   = ConvergenceNode(sleepparam=t)
+    Anode   = AnalysisNode(sleepparam=t)
+    Snode   = SimulationNode(sleepparam=t)
+    pipe    = Pipeline(simulation=Snode, analysis=Anode, convergence=Cnode)
     
     os.mkdir(pipefolder)
     pipe.run(pipefolder + "/")
 
+
 def main():
 
-    cwd = os.getcwd()
-    fileJSON = DataIO()
+    cwd         = os.getcwd()
+    fileJSON    = DataIO()
     directories = fileJSON.readData(cwd + "/directories.json")
-    output = directories["output"]["MBP15"]
+    output      = directories["output"]["MBP15"]
+
     if (output == ""):
         print "empty folder in directories.json"
         exit(1)
 
-    testnum = 1
-    outputfolder = "{0}/test{1}".format(output, testnum) 
+    testnum         = 1
+    outputfolder    = "{0}/test{1}".format(output, testnum) 
 
     NUMWORKERS   = 2        # up to 2^(NUMWORKERS) of cores to use
     NUMTASKS     = 8        # up to 2^(NUMSLEEP) of tasks to use
@@ -43,6 +45,9 @@ def main():
         for NUMTASK in range(NUMWORKERS,NUMTASKS+1):
             print "starting NUMTASK 2^{0}".format(NUMTASK)
 
+            ################################################################################################
+            starttime = time.time()
+
             dirnum = 1
             while (os.path.isdir(outputfolder)):
                 testnum += 1
@@ -52,9 +57,6 @@ def main():
 
             CSVFILE = outputfolder + "/data{0}.csv".format(testnum)
 
-            ################################################################################################
-            starttime = time.time()
-
             sleeptasks = []
             for i in range(2**NUMTASK):
                 while (os.path.isdir(outputfolder+"/pipe{}".format(dirnum))):
@@ -63,21 +65,19 @@ def main():
                 dirnum += 1
 
             # multiprocessing maps the each NUMWORKER to each task in sleeptasks
-            pool = multiprocessing.Pool(processes=2**NUMWORKER)
+            pool    = multiprocessing.Pool(processes=2**NUMWORKER)
             results = pool.map_async(worker, sleeptasks)
             results.wait()
     
-            endtime = time.time()
-            tasktime = endtime - starttime
+            endtime     = time.time()
+            tasktime    = endtime - starttime
             ################################################################################################
 
             ##put data into CSV
             with open(CSVFILE, 'a') as datafile:
                 writer = csv.writer(datafile)
                 writer.writerow([2 ** NUMWORKER, 2 ** NUMTASK, tasktime])
-                # for data in [2**NUMWORKER, 2**NUMTASK, tasktime]:
-                #     writer.writerow(data)
+
 
 if __name__ == "__main__":
-
     main()

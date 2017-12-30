@@ -7,8 +7,8 @@ import time
 class SimulationNode:
 
     def __init__(self, sleepparam=1, analysisnode=None):
-        self.sleeptime = sleepparam
-        self.next = analysisnode
+        self.sleeptime  = sleepparam
+        self.next       = analysisnode
 
     def simulate(self):
         time.sleep(self.sleeptime)
@@ -22,8 +22,8 @@ class SimulationNode:
 class AnalysisNode:
 
     def __init__(self, sleepparam=1, convergenode=None):
-        self.sleeptime = sleepparam
-        self.next = convergenode
+        self.sleeptime  = sleepparam
+        self.next       = convergenode
 
     def analyze(self):
         time.sleep(self.sleeptime)

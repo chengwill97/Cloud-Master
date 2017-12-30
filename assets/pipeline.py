@@ -15,17 +15,17 @@ import datetime
 class Pipeline:
 
     def __init__(self, simulation=SimulationNode(), analysis=AnalysisNode(), convergence=ConvergenceNode()):
-        self.simulation=simulation
-        self.analysis=analysis
-        self.convergence=convergence
+        self.simulation     = simulation
+        self.analysis       = analysis
+        self.convergence    = convergence
 
         self.outputDest = None
-        self.data = {}
+        self.data       = {}
 
 
     def run(self, folder):
-        simulation = self.simulation.simulate()
-        analysis = self.analysis.analyze()
+        simulation  = self.simulation.simulate()
+        analysis    = self.analysis.analyze()
         convergence = self.convergence.converge()
 
         self.data["Date"]              = unicode(datetime.datetime.now())
