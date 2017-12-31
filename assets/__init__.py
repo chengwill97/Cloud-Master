@@ -1,9 +1,20 @@
-import dataIO
+from dataIO import DataIO
 import os
 
-cwd = os.getcwd()
-fileJSON = dataIO.DataIO()
-directories = fileJSON.readData(cwd + "/directories.json")
-output = directories["output"]["MBP15"]
+test = os.path.realpath('..') + '/data/input/parameters.json'
 
-print "{0}/test{1}".format(output, 1)
+data = DataIO()
+
+print "%s" % test
+
+dirs = os.getcwd() + '/directories.json'
+
+print dirs
+
+print data.readData(test)
+
+data2 = data.readData(test)
+
+print data2['machine']
+
+print data2[data2['machine'] + '_parameters']

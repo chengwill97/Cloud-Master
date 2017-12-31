@@ -11,8 +11,11 @@ class SimulationNode:
         self.next       = analysisnode
 
     def simulate(self):
+
         time.sleep(self.sleeptime)
+
         print "\tSimulation slept for {} second(s)".format(self.sleeptime)
+
         return "Simulation Run Successfully"
 
 ############################################################
@@ -26,8 +29,11 @@ class AnalysisNode:
         self.next       = convergenode
 
     def analyze(self):
+
         time.sleep(self.sleeptime)
+
         print "\t\tAnalysis slept for {} second(s)".format(self.sleeptime)
+
         return "Analysis Run Successfully"
 
 ############################################################
@@ -40,8 +46,11 @@ class ConvergenceNode:
         self.sleeptime = sleepparam
 
     def converge(self):
+
         time.sleep(self.sleeptime)
+
         print "\t\t\tConvergence slept for {} second(s)".format(self.sleeptime)
+        
         return "Convergence Run Successfuly"
 
 ############################################################

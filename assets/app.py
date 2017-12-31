@@ -1,8 +1,10 @@
-from nodes import SimulationNode
-from nodes import AnalysisNode
-from nodes import ConvergenceNode
-from pipeline import Pipeline
-from dataIO import DataIO
+from nodes      import SimulationNode
+from nodes      import AnalysisNode
+from nodes      import ConvergenceNode
+
+from pipeline   import Pipeline
+
+from dataIO     import DataIO
 
 import multiprocessing
 import time
@@ -10,6 +12,7 @@ import csv
 import os
 
 def worker(arg):
+
     t, pipefolder = arg
 
     Cnode   = ConvergenceNode(sleepparam=t)
@@ -23,9 +26,9 @@ def worker(arg):
 
 def main():
 
-    cwd         = os.getcwd()
+    cwdJSON     = os.getcwd() + "/directories.json"
     fileJSON    = DataIO()
-    directories = fileJSON.readData(cwd + "/directories.json")
+    directories = fileJSON.readData(cwdJSON)
     output      = directories["output"]["MBP15"]
 
     if (output == ""):

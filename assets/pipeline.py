@@ -1,5 +1,9 @@
-from nodes import *
+from nodes  import SimulationNode
+from nodes  import AnalysisNode
+from nodes  import ConvergenceNode
+
 from dataIO import DataIO
+
 import datetime
 
 
@@ -24,14 +28,10 @@ class Pipeline:
 
 
     def run(self, folder):
-        simulation  = self.simulation.simulate()
-        analysis    = self.analysis.analyze()
-        convergence = self.convergence.converge()
-
         self.data["Date"]              = unicode(datetime.datetime.now())
-        self.data["SimulationResult"]  = simulation
-        self.data["AnalysisResult"]    = analysis
-        self.data["ConvergenceResult"] = convergence
+        self.data["SimulationResult"]  = self.simulation.simulate()
+        self.data["AnalysisResult"]    = self.analysis.analyze()
+        self.data["ConvergenceResult"] = self.convergence.converge()
 
         dataSend = DataIO()
         dataSend.writeData(folder, self.data)

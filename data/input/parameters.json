@@ -1,0 +1,13 @@
+{
+	"machine" : "MBP11",
+
+	"MBP11_parameters" : {
+
+		"output" : "/Users/willcheng2/Google Drive/Rutgers/Research/RADICAL/Minions/data/output",
+
+		"weak_test" : [0, 0],
+
+		"strong_test" : [0, 0]
+	}
+	
+}
