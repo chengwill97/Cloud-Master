@@ -1,86 +1,61 @@
-from nodes      import SimulationNode
-from nodes      import AnalysisNode
-from nodes      import ConvergenceNode
-
-from pipeline   import Pipeline
-
-from dataIO     import DataIO
-
 import multiprocessing
 import time
 import csv
 import os
 
-def worker(arg):
+from nodes      import SimulationNode
+from nodes      import AnalysisNode
+from nodes      import ConvergenceNode
 
-    t, pipefolder = arg
+from pipeline   import Pipeline
+from dataIO     import DataIO
 
-    Cnode   = ConvergenceNode(sleepparam=t)
-    Anode   = AnalysisNode(sleepparam=t)
-    Snode   = SimulationNode(sleepparam=t)
-    pipe    = Pipeline(simulation=Snode, analysis=Anode, convergence=Cnode)
-    
-    os.mkdir(pipefolder)
-    pipe.run(pipefolder + "/")
+from scaling_tests import weak_scale_run
 
 
 def main():
 
-    cwdJSON     = os.getcwd() + "/directories.json"
-    fileJSON    = DataIO()
-    directories = fileJSON.readData(cwdJSON)
-    output      = directories["output"]["MBP15"]
+    # Read in the parameters.json file
+    parameters_path     = os.path.realpath('..') + '/data/input/parameters.json'
+    input_file          = DataIO().readData(parameters_path)
 
-    if (output == ""):
-        print "empty folder in directories.json"
+    # Acquire machine name for the correct parameters
+    machine_name        = input_file['machine']
+    input_parameters    = input_file[machine_name + '_parameters']
+
+    # Acquire machine and test parameters
+    # output_dir        : directory for the output
+    # weak_scale_test   : testing weak scaling
+    # strong_scale_test : testing strong scaling
+    # max_cores         : max cores of the machine
+    output_dir              = input_parameters['output']
+    weak_scale_parameters   = input_parameters['weak_scale_test']
+    strong_scale_parameters = input_parameters['strong_scale_test']
+    max_cores               = input_parameters['max_cores']
+
+    # Check that output_dir exists
+    if not os.path.isdir(output_dir):
+        print 'output directory does not exist for machine %s' % machine_name
         exit(1)
 
-    testnum         = 1
-    outputfolder    = "{0}/test{1}".format(output, testnum) 
+    # Find available dir name for this test in output_dir
+    test_dir_num    = 1
+    test_dir        = '%s/test_%d' % (output_dir, test_dir_num)
+    while (os.path.isdir(test_dir)):
+        test_dir_num += 1
+        test_dir    = '%s/test_%d' % (output_dir, test_dir_num)
 
-    NUMWORKERS   = 2        # up to 2^(NUMWORKERS) of cores to use
-    NUMTASKS     = 8        # up to 2^(NUMSLEEP) of tasks to use
+    # Create available dir for this test in output_dir
+    os.mkdir(test_dir)
 
-    # Run strong and weak scaling tests in double loop
-    for NUMWORKER in range(NUMWORKERS,NUMWORKERS+1):
-        print "starting NUMWORKER 2^{0}".format(NUMWORKER)
+    print test_dir
 
-        for NUMTASK in range(NUMWORKERS,NUMTASKS+1):
-            print "starting NUMTASK 2^{0}".format(NUMTASK)
+    # Run Weak Scale Tests
+    weak_scale_run(test_dir, weak_scale_parameters, max_cores)
 
-            ################################################################################################
-            starttime = time.time()
-
-            dirnum = 1
-            while (os.path.isdir(outputfolder)):
-                testnum += 1
-                outputfolder = "{0}/test{1}".format(output, testnum)
-            if (not os.path.isdir(outputfolder)):
-                os.mkdir(outputfolder)
-
-            CSVFILE = outputfolder + "/data{0}.csv".format(testnum)
-
-            sleeptasks = []
-            for i in range(2**NUMTASK):
-                while (os.path.isdir(outputfolder+"/pipe{}".format(dirnum))):
-                    dirnum += 1
-                sleeptasks.append((1, outputfolder+"/pipe{}".format(dirnum)))
-                dirnum += 1
-
-            # multiprocessing maps the each NUMWORKER to each task in sleeptasks
-            pool    = multiprocessing.Pool(processes=2**NUMWORKER)
-            results = pool.map_async(worker, sleeptasks)
-            results.wait()
-    
-            endtime     = time.time()
-            tasktime    = endtime - starttime
-            ################################################################################################
-
-            ##put data into CSV
-            with open(CSVFILE, 'a') as datafile:
-                writer = csv.writer(datafile)
-                writer.writerow([2 ** NUMWORKER, 2 ** NUMTASK, tasktime])
+    # Run Strong Scale Tests
+    # strong_scale_run(test_dir, weak_scale_parameters, max_cores)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
