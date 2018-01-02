@@ -1,0 +1,21 @@
+{
+    "MBP11_parameters": {
+        "max_cores": 1,
+        "output": "/Users/willcheng2/Google_Drive/Rutgers/Research/RADICAL/Minions/data/output",
+        "strong_scale_test": {
+            "begin_number_cores": 0,
+            "begin_number_jobs": 0,
+            "end_number_cores": 0,
+            "end_number_jobs": 0,
+            "run_test": true
+        },
+        "weak_scale_test": {
+            "begin_jobs_per_core": 0,
+            "begin_number_cores": 0,
+            "end_jobs_per_core": 4,
+            "end_number_cores": 1,
+            "run_test": true
+        }
+    },
+    "machine": "MBP11"
+}

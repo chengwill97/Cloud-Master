@@ -1,46 +1,29 @@
 {
 	"machine" : "MBP11",
+	
 	"MBP11_parameters" : {
 
 		"output" : "/Users/willcheng2/Google_Drive/Rutgers/Research/RADICAL/Minions/data/output",
 		"weak_scale_test" : {
 
-			"lower_bound_cores" 	: 0,
-			"upper_bound_cores" 	: 0,
-			"start_jobs_per_core" 	: 0,
-			"end_jobs_per_core" 	: 0
+			"run_test" : true,
+
+			"begin_number_cores" 	: 0,
+			"end_number_cores" 		: 1,
+			"begin_jobs_per_core" 	: 0,
+			"end_jobs_per_core" 	: 4
 
 		},
 		"strong_scale_test" : {
 
-			"lower_bound_jobs" 	: 0,
-			"upper_bound_jobs" 	: 0,
-			"start_total_cores" : 0,
-			"end_total_cores" 	: 0
+			"run_test" : true,
+
+			"begin_number_jobs" 	: 0,
+			"end_number_jobs" 		: 0,
+			"begin_number_cores" 	: 0,
+			"end_number_cores" 		: 0
 
 		},
-		"max_cores" : 2
-	},
-	"machine_2" : {
-
-		"output" : "",
-		"weak_scale_test" : {
-
-			"lower_bound_cores" 	: 0,
-			"upper_bound_cores" 	: 0,
-			"start_jobs_per_core" 	: 0,
-			"end_jobs_per_core" 	: 0
-
-		},
-		"strong_scale_test" : {
-
-			"lower_bound_jobs" 	: 0,
-			"upper_bound_jobs" 	: 0,
-			"start_total_cores" : 0,
-			"end_total_cores" 	: 0
-
-		},
-		"max_cores" : 0
+		"max_cores" : 1
 	}
-	
 }
