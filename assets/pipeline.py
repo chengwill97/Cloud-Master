@@ -2,7 +2,7 @@ from nodes  import SimulationNode
 from nodes  import AnalysisNode
 from nodes  import ConvergenceNode
 
-from dataIO import DataIO
+from dataIO import write_json
 
 import datetime
 
@@ -23,8 +23,7 @@ class Pipeline:
         self.analysis       = analysis
         self.convergence    = convergence
 
-        self.outputDest = None
-        self.data       = {}
+        self.data = dictionary()
 
 
     def run(self, folder):
@@ -33,5 +32,4 @@ class Pipeline:
         self.data["AnalysisResult"]    = self.analysis.analyze()
         self.data["ConvergenceResult"] = self.convergence.converge()
 
-        dataSend = DataIO()
-        dataSend.writeData(folder, self.data)
+        write_json(folder, self.data)
