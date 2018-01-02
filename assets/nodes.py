@@ -7,6 +7,7 @@ import time
 class SimulationNode:
 
     def __init__(self, sleepparam=1, analysisnode=None):
+
         self.sleeptime  = sleepparam
         self.next       = analysisnode
 
@@ -18,6 +19,7 @@ class SimulationNode:
 
         return "Simulation Run Successfully"
 
+
 ############################################################
 #
 #   AnalysisNode does the analysis of the data
@@ -25,6 +27,7 @@ class SimulationNode:
 class AnalysisNode:
 
     def __init__(self, sleepparam=1, convergenode=None):
+
         self.sleeptime  = sleepparam
         self.next       = convergenode
 
@@ -36,9 +39,10 @@ class AnalysisNode:
 
         return "Analysis Run Successfully"
 
+
 ############################################################
 #
-#   SimulationNode conducts the simulations
+#   ConvergenceNode checks that the results are converging
 #
 class ConvergenceNode:
 
@@ -53,4 +57,3 @@ class ConvergenceNode:
         
         return "Convergence Run Successfuly"
 
-############################################################

@@ -16,7 +16,7 @@
 		},
 		"strong_scale_test" : {
 
-			"run_test" : false,
+			"run_test" : true,
 
 			"begin_number_jobs" 	: 0,
 			"end_number_jobs" 		: 0,

@@ -3,17 +3,19 @@ import time
 import csv
 import os
 
-from nodes      import SimulationNode
-from nodes      import AnalysisNode
-from nodes      import ConvergenceNode
+from math import pow
 
-from pipeline   import Pipeline
+from nodes import SimulationNode
+from nodes import AnalysisNode
+from nodes import ConvergenceNode
 
 from dataIO import read_json
 from dataIO import write_json
 from dataIO import append_csv
 
-from math import pow
+from pipeline import Pipeline
+
+
 
 
 #######################################################################
@@ -30,15 +32,17 @@ def worker(task):
 	simulation_node 	= SimulationNode(sleepparam=sleep_time)
 	analysis_node   	= AnalysisNode(sleepparam=sleep_time)
 	convergence_node	= ConvergenceNode(sleepparam=sleep_time)
-	
-	pipe = Pipeline(simulation=simulate_node, analysis=analyze_node, convergence=converge_node)
-	
+		
 	try:
+		
 		os.mkdir(pipe_folder)
+		
+		pipeline = Pipeline(simulation=simulation_node, analysis=analysis_node, convergence=convergence_node)
+		
+		pipeline.run(pipe_folder + '/')
+
 	except (OSError, IOError) as e:
 		print e
-		return
-	pipe.run(pipe_folder + '/')
 
 
 #######################################################################
@@ -101,7 +105,7 @@ def weak_scale_run(test_dir, weak_scale_parameters, max_cores):
 		# Vary the number of jobs per core
 		for jobs_per_core in range(BEGIN_JOBS_PER_CORE, END_JOBS_PER_CORE):
 
-			print 'Running weak scale with %d jobs per core' % pow(2,  jobs_per_core)
+			print '\tRunning weak scale with %d jobs per core' % pow(2,  jobs_per_core)
 
 			# Start timer
 			begin_time = time.time()
@@ -144,7 +148,7 @@ def weak_scale_run(test_dir, weak_scale_parameters, max_cores):
 			end_time = time.time()
 			run_time = end_time - begin_time
 
-			csv_file = run_dir + '/data%d.csv' % (run_dir_num)
+			csv_file = run_dir + '/data_%d.csv' % (run_dir_num)
 
 			# Export data into csv_file
 			data = [pow(2, number_cores), pow(2, jobs_per_core), run_time]
@@ -254,7 +258,7 @@ def strong_scale_run(test_dir, strong_scale_parameters, max_cores):
 			end_time = time.time()
 			run_time = end_time - begin_time
 
-			csv_file = run_dir + '/data%d.csv' % (run_dir_num)
+			csv_file = run_dir + '/data_%d.csv' % (run_dir_num)
 
 			# Export data into csv_file
 			data = [pow(2, number_jobs), pow(2, number_cores), run_time]
