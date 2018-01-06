@@ -2,7 +2,6 @@
 	"machine" : "MBP15",
 
 	"MBP15_parameters" : {
-
 		"max_cores" : 4,
 		"output" : "/Users/WillC/Documents/Rutgers/Research/RADICAL/Minions/data/output",
 		"weak_scale_test" : {
@@ -18,10 +17,8 @@
 			"end_number_jobs" 		: 0,
 			"begin_number_cores" 	: 0,
 			"end_number_cores" 		: 0
-
 		}
 	},
-	
 	"MBP11_parameters" : {
 
 		"max_cores" : 1,
