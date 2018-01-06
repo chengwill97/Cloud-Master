@@ -18,20 +18,21 @@ import datetime
 #
 class Pipeline:
 
+
     def __init__(self, simulation=SimulationNode(), analysis=AnalysisNode(), convergence=ConvergenceNode()):
 
         self.simulation     = simulation
         self.analysis       = analysis
         self.convergence    = convergence
 
-        self.data = dict()
+        self.results = dict()
 
 
-    def run(self, folder):
+    def run(self):
 
-        self.data['Date']              = unicode(datetime.datetime.now())
-        self.data['SimulationResult']  = self.simulation.simulate()
-        self.data['AnalysisResult']    = self.analysis.analyze()
-        self.data['ConvergenceResult'] = self.convergence.converge()
+        self.results['date']                = unicode(datetime.datetime.now())
+        self.results['simulation_result']   = self.simulation.simulate()
+        self.results['analysis_result']     = self.analysis.analyze()
+        self.results['convergence_result']  = self.convergence.converge()
 
-        write_json(folder + '/results.json', self.data)
+        return self.results

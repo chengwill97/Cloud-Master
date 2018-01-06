@@ -6,16 +6,16 @@ import time
 #
 class SimulationNode:
 
-    def __init__(self, sleepparam=1, analysisnode=None):
+    def __init__(self, sleep_time=1, analysisnode=None):
 
-        self.sleeptime  = sleepparam
+        self.sleep_time  = sleep_time
         self.next       = analysisnode
 
     def simulate(self):
 
-        time.sleep(self.sleeptime)
+        time.sleep(self.sleep_time)
 
-        print "\tSimulation slept for {} second(s)".format(self.sleeptime)
+        print "\tSimulation slept for %d second(s)" % self.sleep_time
 
         return "Simulation Run Successfully"
 
@@ -26,16 +26,16 @@ class SimulationNode:
 #
 class AnalysisNode:
 
-    def __init__(self, sleepparam=1, convergenode=None):
+    def __init__(self, sleep_time=1, convergenode=None):
 
-        self.sleeptime  = sleepparam
+        self.sleep_time  = sleep_time
         self.next       = convergenode
 
     def analyze(self):
 
-        time.sleep(self.sleeptime)
+        time.sleep(self.sleep_time)
 
-        print "\t\tAnalysis slept for {} second(s)".format(self.sleeptime)
+        print "\t\tAnalysis slept for %d second(s)" % self.sleep_time
 
         return "Analysis Run Successfully"
 
@@ -46,14 +46,14 @@ class AnalysisNode:
 #
 class ConvergenceNode:
 
-    def __init__(self, sleepparam=1):
-        self.sleeptime = sleepparam
+    def __init__(self, sleep_time=1):
+        self.sleep_time = sleep_time
 
     def converge(self):
 
-        time.sleep(self.sleeptime)
+        time.sleep(self.sleep_time)
 
-        print "\t\t\tConvergence slept for {} second(s)".format(self.sleeptime)
+        print "\t\t\tConvergence slept for %d second(s)" % self.sleep_time
         
         return "Convergence Run Successfuly"
 

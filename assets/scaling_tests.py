@@ -16,8 +16,6 @@ from dataIO import append_csv
 from pipeline import Pipeline
 
 
-
-
 #######################################################################
 #
 # 	worker Function
@@ -29,9 +27,9 @@ def worker(task):
 
 	sleep_time, pipe_folder = task
 
-	simulation_node 	= SimulationNode(sleepparam=sleep_time)
-	analysis_node   	= AnalysisNode(sleepparam=sleep_time)
-	convergence_node	= ConvergenceNode(sleepparam=sleep_time)
+	simulation_node 	= SimulationNode(sleep_time=sleep_time)
+	analysis_node   	= AnalysisNode(sleep_time=sleep_time)
+	convergence_node	= ConvergenceNode(sleep_time=sleep_time)
 		
 	try:
 		
@@ -39,7 +37,9 @@ def worker(task):
 		
 		pipeline = Pipeline(simulation=simulation_node, analysis=analysis_node, convergence=convergence_node)
 		
-		pipeline.run(pipe_folder + '/')
+		results = pipeline.run()
+
+		write_json(pipe_folder + '/results.json', results)
 
 	except (OSError, IOError) as e:
 		print e
