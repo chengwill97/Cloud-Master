@@ -63,9 +63,27 @@ def get_weak_scale_test_dir(test_dir):
 
 #######################################################################
 #
+# 	get_strong_scale_test_dir Function
+#
+# 	Returns the output for the strong scale test
+#
+def get_strong_scale_test_dir(test_dir):
+
+	strong_scale_test_dir = test_dir + '/strong_scale_output'
+
+	# Check if strong_scale_test_dir exists
+	# if false, create such directory in parent test_dir
+	if not os.path.isdir(strong_scale_test_dir):
+		os.mkdir(strong_scale_test_dir)
+
+	return strong_scale_test_dir
+
+
+#######################################################################
+#
 # 	weak_scale_run Function
 #
-# 	Does a weak scale test with the current weak scale paramters
+# 	Does a weak scale test with the current weak scale parameters
 #
 def weak_scale_run(test_dir, weak_scale_parameters, max_cores):
 
@@ -121,8 +139,8 @@ def weak_scale_run(test_dir, weak_scale_parameters, max_cores):
 			###############################################################
 
 			# Create tasks
-			tasks = list()
 			total_number_tasks = int(pow(2, jobs_per_core + number_cores))
+			tasks = list()
 			for pipe_num in range(1, total_number_tasks+1):
 
 				sleep_time 	= 1
@@ -144,7 +162,7 @@ def weak_scale_run(test_dir, weak_scale_parameters, max_cores):
 			# End timer
 			run_time = time.time() - begin_time
 
-			csv_file = run_dir + '/data_%d.csv' % (run_dir_num)
+			csv_file = run_dir + '/data.csv' % (run_dir_num)
 
 			# Export data into csv_file
 			data = [pow(2, number_cores), pow(2, jobs_per_core), run_time]
@@ -153,27 +171,9 @@ def weak_scale_run(test_dir, weak_scale_parameters, max_cores):
 
 #######################################################################
 #
-# 	get_strong_scale_test_dir Function
-#
-# 	Returns the output for the strong scale test
-#
-def get_strong_scale_test_dir(test_dir):
-
-	strong_scale_test_dir = test_dir + '/strong_scale_output'
-
-	# Check if strong_scale_test_dir exists
-	# if false, create such directory in parent test_dir
-	if not os.path.isdir(strong_scale_test_dir):
-		os.mkdir(strong_scale_test_dir)
-
-	return strong_scale_test_dir
-
-
-#######################################################################
-#
 # 	strong_scale_run Function
 #
-# 	Does a strong scale test with the current strong scale paramters
+# 	Does a strong scale test with the current strong scale parameters
 #
 def strong_scale_run(test_dir, strong_scale_parameters, max_cores):
 
