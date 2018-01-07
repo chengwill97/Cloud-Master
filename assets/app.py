@@ -34,10 +34,10 @@ def main():
 
     # Find available dir name for this test in output_dir
     test_dir_num    = 1
-    test_dir        = '%s/test_%d' % (output_dir, test_dir_num)
+    test_dir        = '%s/%s_test_%d' % (output_dir, machine_name, test_dir_num)
     while (os.path.isdir(test_dir)):
         test_dir_num += 1
-        test_dir = '%s/test_%d' % (output_dir, test_dir_num)
+        test_dir = '%s/%s_test_%d' % (output_dir, machine_name, test_dir_num)
 
     # Create available dir for this test in output_dir
     os.mkdir(test_dir)

@@ -25,22 +25,20 @@ from pipeline import Pipeline
 #
 def worker(task):
 
-	sleep_time, pipe_folder = task
+	sleep_time, run_dir = task
+	process_name   = multiprocessing.current_process().name
 
-	simulation_node 	= SimulationNode(sleep_time=sleep_time)
-	analysis_node   	= AnalysisNode(sleep_time=sleep_time)
-	convergence_node	= ConvergenceNode(sleep_time=sleep_time)
+	simulation_node 	= SimulationNode(sleep_time=sleep_time, process_name=process_name)
+	analysis_node   	= AnalysisNode(sleep_time=sleep_time, process_name=process_name)
+	convergence_node	= ConvergenceNode(sleep_time=sleep_time, process_name=process_name)
 		
 	try:
-		
-		os.mkdir(pipe_folder)
-		
+		pipe_dir = run_dir + '/' + process_name
+		os.mkdir(pipe_dir)
 		pipeline = Pipeline(simulation=simulation_node, analysis=analysis_node, convergence=convergence_node)
-		
 		results = pipeline.run()
 
-		write_json(pipe_folder + '/results.json', results)
-
+		write_json(pipe_dir + '/results.json', results)
 	except (OSError, IOError) as e:
 		print e
 
@@ -128,8 +126,7 @@ def weak_scale_run(test_dir, weak_scale_parameters, max_cores):
 			for pipe_num in range(1, total_number_tasks+1):
 
 				sleep_time 	= 1
-				pipe_folder = run_dir + '/pipe_%d' % (pipe_num)
-				task 		= (sleep_time, pipe_folder)
+				task 		= (sleep_time, run_dir)
 
 				tasks.append(task)
 
@@ -145,8 +142,7 @@ def weak_scale_run(test_dir, weak_scale_parameters, max_cores):
 			results.wait()
 
 			# End timer
-			end_time = time.time()
-			run_time = end_time - begin_time
+			run_time = time.time() - begin_time
 
 			csv_file = run_dir + '/data_%d.csv' % (run_dir_num)
 
@@ -255,8 +251,7 @@ def strong_scale_run(test_dir, strong_scale_parameters, max_cores):
 			results.wait()
 
 			# End timer
-			end_time = time.time()
-			run_time = end_time - begin_time
+			run_time = time.time() - begin_time
 
 			csv_file = run_dir + '/data_%d.csv' % (run_dir_num)
 
