@@ -30,8 +30,13 @@
         "weak_scale_test": {
             "begin_jobs_per_core": 0,
             "begin_number_cores": 0,
+<<<<<<< HEAD
+            "end_jobs_per_core": 2,
+            "end_number_cores": 2,
+=======
             "end_jobs_per_core": 1,
             "end_number_cores": 1,
+>>>>>>> master
             "run_test": true
         }
     },

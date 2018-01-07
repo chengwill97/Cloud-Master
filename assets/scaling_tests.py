@@ -20,27 +20,51 @@ from pipeline import Pipeline
 #
 # 	worker Function
 #
-# 	Worker that emaulates the 
+# 	Worker that emaulates the Expanded Ensemble
 # 	Simulate -> Analyze -> Converge sequence
 #
-def worker(task):
+def worker_sleeps(task):
 
 	sleep_time, run_dir = task
+	pipe_dir = run_dir + '/' + process_name
 	process_name   = multiprocessing.current_process().name
 
+	# Create Nodes for Expanded Ensemble algorithm
 	simulation_node 	= SimulationNode(sleep_time=sleep_time, process_name=process_name)
 	analysis_node   	= AnalysisNode(sleep_time=sleep_time, process_name=process_name)
 	convergence_node	= ConvergenceNode(sleep_time=sleep_time, process_name=process_name)
-		
-	try:
-		pipe_dir = run_dir + '/' + process_name
-		os.mkdir(pipe_dir)
-		pipeline = Pipeline(simulation=simulation_node, analysis=analysis_node, convergence=convergence_node)
-		results = pipeline.run()
 
-		write_json(pipe_dir + '/results.json', results)
-	except (OSError, IOError) as e:
-		print e
+	# Find available directory name
+	process_num = 0
+	while(not os.path.exists(pipe_dir + '_' + str(process_num))):
+		try:
+			os.mkdir(pipe_dir + '_' + str(process_num))
+		except (OSError, IOError) as e:
+			process_num += 1
+			continue
+		
+	pipeline = Pipeline(simulation=simulation_node, analysis=analysis_node, convergence=convergence_node)
+	
+	# Execute nodes
+	results = pipeline.run()
+	write_json(pipe_dir + '_' + str(process_num) + '/results.json', results)
+
+
+#######################################################################
+#
+# 	assign_tasks Function
+#
+# 	populate cores with pipelines
+#
+def assign_tasks(number_cores, worker, tasks):
+	# Map tasks to processes
+	pool = multiprocessing.Pool(processes=int(pow(2,number_cores)))
+
+	# Injects each tasks into a function asynchronously
+	results = pool.map_async(worker, tasks)
+
+	# Waits for all processes to complete before continuing
+	results.wait()
 
 
 #######################################################################
@@ -90,15 +114,9 @@ def weak_scale_run(test_dir, weak_scale_parameters, max_cores):
 	print 'Starting Weak Scale Run:\n'
 
 	BEGIN_NUMBER_CORES 	= weak_scale_parameters['begin_number_cores']
-	END_NUMBER_CORES 	= weak_scale_parameters['end_number_cores']
+	END_NUMBER_CORES 	= weak_scale_parameters['end_number_cores'] + 1
 	BEGIN_JOBS_PER_CORE = weak_scale_parameters['begin_jobs_per_core']
-	END_JOBS_PER_CORE 	= weak_scale_parameters['end_jobs_per_core']
-
-	# Check that parameters are valid
-	if BEGIN_NUMBER_CORES == END_NUMBER_CORES:
-		END_NUMBER_CORES += 1
-	if BEGIN_JOBS_PER_CORE == END_JOBS_PER_CORE:
-		END_JOBS_PER_CORE += 1
+	END_JOBS_PER_CORE 	= weak_scale_parameters['end_jobs_per_core'] + 1
 
 	# Check that parameters are valid
 	if BEGIN_NUMBER_CORES > END_NUMBER_CORES or BEGIN_NUMBER_CORES < 0:
@@ -141,28 +159,20 @@ def weak_scale_run(test_dir, weak_scale_parameters, max_cores):
 			# Create tasks
 			total_number_tasks = int(pow(2, jobs_per_core + number_cores))
 			tasks = list()
-			for pipe_num in range(1, total_number_tasks+1):
+			for pipe_num in range(total_number_tasks):
 
-				sleep_time 	= 1
+				sleep_time 	= 0.1
 				task 		= (sleep_time, run_dir)
-
 				tasks.append(task)
 
-			###############################################################
-
-			# Map tasks to processes
-			pool = multiprocessing.Pool(processes=int(pow(2,number_cores)))
-
-			# Injects each tasks into a function asynchronously
-			results = pool.map_async(worker, tasks)
-
-			# Waits for all processes to complete before continuing
-			results.wait()
+			# assigns the tasks to cores
+			assign_tasks(number_cores, worker_sleeps, tasks)
 
 			# End timer
-			run_time = time.time() - begin_time
+			end_time = time.time()
+			run_time = end_time - begin_time
 
-			csv_file = run_dir + '/data.csv' % (run_dir_num)
+			csv_file = run_dir + '/data.csv'
 
 			# Export data into csv_file
 			data = [pow(2, number_cores), pow(2, jobs_per_core), run_time]
@@ -240,18 +250,13 @@ def strong_scale_run(test_dir, strong_scale_parameters, max_cores):
 				tasks.append(task)
 
 			###############################################################
-
-			# Map tasks to processes
-			pool = multiprocessing.Pool(processes=int(pow(2,number_jobs)))
-
-			# Injects each tasks into a function asynchronously
-			results = pool.map_async(worker, tasks)
-
-			# Waits for all processes to complete before continuing
-			results.wait()
+			
+			# assigns the tasks to cores
+			assign_tasks(number_cores, worker_sleeps, tasks)
 
 			# End timer
-			run_time = time.time() - begin_time
+			end_time = time.time()
+			run_time = end_time - begin_time
 
 			csv_file = run_dir + '/data_%d.csv' % (run_dir_num)
 
