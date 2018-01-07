@@ -23,8 +23,8 @@ class Pipeline:
 
         self.simulation     = simulation
         self.analysis       = analysis
-        self.convergence    = convergence
-
+        self.convergence    = convergence 
+        
         self.results = dict()
 
 

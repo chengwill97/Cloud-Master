@@ -32,15 +32,10 @@ def worker(task):
 	convergence_node	= ConvergenceNode(sleep_time=sleep_time)
 		
 	try:
-		
 		os.mkdir(pipe_folder)
-		
 		pipeline = Pipeline(simulation=simulation_node, analysis=analysis_node, convergence=convergence_node)
-		
 		results = pipeline.run()
-
 		write_json(pipe_folder + '/results.json', results)
-
 	except (OSError, IOError) as e:
 		print e
 
@@ -61,6 +56,24 @@ def get_weak_scale_test_dir(test_dir):
 		os.mkdir(weak_scale_test_dir)
 
 	return weak_scale_test_dir
+
+
+#######################################################################
+#
+# 	get_strong_scale_test_dir Function
+#
+# 	Returns the output for the strong scale test
+#
+def get_strong_scale_test_dir(test_dir):
+
+	strong_scale_test_dir = test_dir + '/strong_scale_output'
+
+	# Check if strong_scale_test_dir exists
+	# if false, create such directory in parent test_dir
+	if not os.path.isdir(strong_scale_test_dir):
+		os.mkdir(strong_scale_test_dir)
+
+	return strong_scale_test_dir
 
 
 #######################################################################
@@ -153,24 +166,6 @@ def weak_scale_run(test_dir, weak_scale_parameters, max_cores):
 			# Export data into csv_file
 			data = [pow(2, number_cores), pow(2, jobs_per_core), run_time]
 			append_csv(csv_file, data)
-
-
-#######################################################################
-#
-# 	get_strong_scale_test_dir Function
-#
-# 	Returns the output for the strong scale test
-#
-def get_strong_scale_test_dir(test_dir):
-
-	strong_scale_test_dir = test_dir + '/strong_scale_output'
-
-	# Check if strong_scale_test_dir exists
-	# if false, create such directory in parent test_dir
-	if not os.path.isdir(strong_scale_test_dir):
-		os.mkdir(strong_scale_test_dir)
-
-	return strong_scale_test_dir
 
 
 #######################################################################

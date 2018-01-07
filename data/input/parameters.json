@@ -7,7 +7,7 @@
 		"weak_scale_test" : {
 			"run_test" : true,
 			"begin_number_cores" 	: 0,
-			"end_number_cores" 		: 1,
+			"end_number_cores" 		: 2,
 			"begin_jobs_per_core" 	: 0,
 			"end_jobs_per_core" 	: 1
 		},

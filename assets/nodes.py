@@ -1,4 +1,5 @@
 import time
+import multiprocessing
 
 ############################################################
 #
@@ -8,16 +9,15 @@ class SimulationNode:
 
     def __init__(self, sleep_time=1, analysisnode=None):
 
-        self.sleep_time  = sleep_time
-        self.next       = analysisnode
+        self.sleep_time     = sleep_time
+        self.next           = analysisnode
+        self.process_name   = multiprocessing.current_process().name
 
     def simulate(self):
 
         time.sleep(self.sleep_time)
-
-        print "\tSimulation slept for %d second(s)" % self.sleep_time
-
-        return "Simulation Run Successfully"
+        print "\t" + "%s: simulating for %d second(s)" % (self.process_name, self.sleep_time)
+        return "%s simulated successfully" % self.process_name
 
 
 ############################################################
@@ -28,16 +28,17 @@ class AnalysisNode:
 
     def __init__(self, sleep_time=1, convergenode=None):
 
-        self.sleep_time  = sleep_time
-        self.next       = convergenode
+        self.sleep_time     = sleep_time
+        self.next           = convergenode
+        self.process_name   = multiprocessing.current_process().name
 
     def analyze(self):
 
+        process_name = multiprocessing.current_process().name
         time.sleep(self.sleep_time)
+        print 2*"\t" +  "%s: analyzing for %d second(s)" % (self.process_name, self.sleep_time)
 
-        print "\t\tAnalysis slept for %d second(s)" % self.sleep_time
-
-        return "Analysis Run Successfully"
+        return "%s analyzed successfully" % self.process_name
 
 
 ############################################################
@@ -47,13 +48,14 @@ class AnalysisNode:
 class ConvergenceNode:
 
     def __init__(self, sleep_time=1):
-        self.sleep_time = sleep_time
+        self.sleep_time     = sleep_time
+        self.process_name   = multiprocessing.current_process().name
 
     def converge(self):
 
+        process_name = multiprocessing.current_process().name
         time.sleep(self.sleep_time)
+        print 3*"\t" + "\t%s: converging for %d second(s)" % (self.process_name, self.sleep_time)
 
-        print "\t\t\tConvergence slept for %d second(s)" % self.sleep_time
-        
-        return "Convergence Run Successfuly"
+        return "%s converged successfully" % self.process_name
 
