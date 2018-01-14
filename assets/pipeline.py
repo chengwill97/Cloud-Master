@@ -19,20 +19,17 @@ import datetime
 class Pipeline:
 
 
-    def __init__(self, simulation=SimulationNode(), analysis=AnalysisNode(), convergence=ConvergenceNode()):
-
+    def __init__(self, 
+        simulation=SimulationNode(), analysis=AnalysisNode(), convergence=ConvergenceNode()):
         self.simulation     = simulation
         self.analysis       = analysis
         self.convergence    = convergence 
-        
         self.results = dict()
 
-
+    # Execute nodes in EE algorithm
     def run(self):
-
         self.results['date']                = unicode(datetime.datetime.now())
         self.results['simulation_result']   = self.simulation.simulate()
         self.results['analysis_result']     = self.analysis.analyze()
         self.results['convergence_result']  = self.convergence.converge()
-
         return self.results

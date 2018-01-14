@@ -1,10 +1,13 @@
+#!/usr/bin/env python2.7
+
 import os
 
 from dataIO import read_json
 from dataIO import write_json
 
-from scaling_tests import weak_scale_run
-from scaling_tests import strong_scale_run
+from multiprocess import weak_scale_run
+from multiprocess import strong_scale_run
+from multiprocess import single_run
 
 
 def main():
@@ -23,6 +26,7 @@ def main():
     # strong_scale_test     : testing strong scaling
     # max_cores             : max cores of the machine
     output_dir              = input_parameters['output']
+    single_test_parameters  = input_parameters['single_test']
     weak_scale_parameters   = input_parameters['weak_scale_test']
     strong_scale_parameters = input_parameters['strong_scale_test']
     max_cores               = input_parameters['max_cores']
@@ -34,25 +38,29 @@ def main():
 
     # Find available dir name for this test in output_dir
     test_dir_num    = 1
-    test_dir        = '%s/%s_test_%d' % (output_dir, machine_name, test_dir_num)
+    test_dir        = '%s/%s_test_%03d' % (output_dir, machine_name, test_dir_num)
     while (os.path.isdir(test_dir)):
         test_dir_num += 1
-        test_dir = '%s/%s_test_%d' % (output_dir, machine_name, test_dir_num)
+        test_dir = '%s/%s_test_%03d' % (output_dir, machine_name, test_dir_num)
 
     # Create available dir for this test in output_dir
     os.mkdir(test_dir)
 
     # Copy test parameters into test folder
-    copy_parameters_file = test_dir + '/parameters_%d.json' % test_dir_num
+    copy_parameters_file = test_dir + '/parameters_%03d.json' % test_dir_num
     write_json(copy_parameters_file, input_file)
 
-    # Run Weak Scale Tests
-    if weak_scale_parameters['run_test']:
-        weak_scale_run(test_dir, weak_scale_parameters, max_cores)
+    # Run single test
+    if single_test_parameters['run_test']:
+        single_run(test_dir, single_test_parameters, max_cores)
+    else:
+        # Run Weak Scale Tests
+        if weak_scale_parameters['run_test']:
+            weak_scale_run(test_dir, weak_scale_parameters, max_cores)
 
-    # Run Strong Scale Tests
-    if strong_scale_parameters['run_test']:
-        strong_scale_run(test_dir, strong_scale_parameters, max_cores)
+        # Run Strong Scale Tests
+        if strong_scale_parameters['run_test']:
+            strong_scale_run(test_dir, strong_scale_parameters, max_cores)
 
 
 if __name__ == '__main__':
