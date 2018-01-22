@@ -26,11 +26,10 @@ from pipeline import Pipeline
 # 	Simulate -> Analyze -> Converge sequence
 #
 def worker_sleeps(ch, method, properties, body):
-
 	# Unpickle data
-	body = pickle.loads(body)
+	data = pickle.loads(body)
 
-	sleep_time, run_dir = body
+	sleep_time, run_dir = data
 	process_name   = multiprocessing.current_process().name
 	pipe_dir = run_dir + '/' + process_name
 
@@ -53,6 +52,7 @@ def worker_sleeps(ch, method, properties, body):
 	pipeline = Pipeline(simulation=simulation_node,
 						analysis=analysis_node,
 						convergence=convergence_node)
+
 	# Execute nodes
 	results = pipeline.run()
 	
@@ -64,38 +64,11 @@ def worker_sleeps(ch, method, properties, body):
 
 #######################################################################
 #
-# 	assign_tasks Function
-#
-# 	populate cores with pipelines
-#
-def assign_tasks(number_cores, worker):
-
-	workers = int(pow(2, number_cores))
-
-	# Map tasks to processes
-	pool = multiprocessing.Pool(processes=workers)
-
-	# Injects each tasks into a function asynchronously
-	for worker in xrange(workers):
-		print '***********************************'
-		pool.apply_async(hire_worker)
-
-	try:
-		while True:
-			continue
-	except KeyboardInterrupt:
-		print ' [x] Exiting'
-		pool.terminate()
-		pool.join()
-
-
-#######################################################################
-#
 # 	hire_worker Function
 #
 # 	hire process that executes tasks
 #
-def hire_worker():
+def hire_worker(queue_name):
 
 	process_name = multiprocessing.current_process().name
 
@@ -104,13 +77,13 @@ def hire_worker():
 
 	channel = connection.channel()
 
-	channel.queue_declare(queue='sleep_queue', durable=True)
-
+	channel.queue_declare(queue=queue_name, durable=True)
+	print 'consuming'
 	# Sets maximum number of pre-assigned tasks to 1
 	channel.basic_qos(prefetch_count=1)
 
 	channel.basic_consume(worker_sleeps,
-						  queue='sleep_queue')
+						  queue=queue_name)
 
 	print(' [x] %s Waiting for messages. To exit press CTRL+C' % process_name)
 
@@ -126,7 +99,18 @@ def hire_worker():
 #
 # 	Does a single test with the current parameteres
 #
-def single_run(test_dir, single_run_paramteres, max_cores):
+def get_queue_depth(ch, queue_name):
+
+	return ch.queue_declare(queue=queue_name, passive=True).method.message_count
+
+
+#######################################################################
+#
+# 	single_run Function
+#
+# 	Does a single test with the current parameteres
+#
+def single_run(test_dir, max_cores, queue_name, single_run_paramteres):
 
 	NUMBER_CORES 	= single_run_paramteres['number_cores']
 	NUMBER_JOBS		= single_run_paramteres['number_jobs']
@@ -135,11 +119,10 @@ def single_run(test_dir, single_run_paramteres, max_cores):
 
 	# Check that parameters are valid
 	if NUMBER_CORES > max_cores or NUMBER_CORES < 0:
-		print 'Error: Number of cores is wrong'
+		print 'Error: Number of cores is not valid'
 		return
 
 	run_dir = get_single_run_dir(test_dir)
-	print run_dir
 
 	workers = int(pow(2, NUMBER_CORES))
 
@@ -148,20 +131,20 @@ def single_run(test_dir, single_run_paramteres, max_cores):
 
 	# Injects each tasks into a function asynchronously
 	for worker in xrange(workers):
-		pool.apply_async(hire_worker)
+		pool.apply_async(hire_worker,[queue_name])
 		print 'Worker %d hired' % worker
 
 	# Establish a connection with RabbitMQ server
 	connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
 	channel = connection.channel()
 
-	# creating a 'hello' queue to which message will be delivered
-	channel.queue_declare(queue='sleep_queue', durable=True)
+	# Declare queue to be used in the transfer process
+	channel.queue_declare(queue=queue_name, durable=True)
 
 	total_number_tasks = int(pow(2, NUMBER_JOBS))
 	for i in xrange(total_number_tasks):
 
-		sleep_time 	= 1
+		sleep_time 	= 0.1
 		task 		= (sleep_time, run_dir)
 		
 		# Pickle task
@@ -169,25 +152,25 @@ def single_run(test_dir, single_run_paramteres, max_cores):
 
 		# Upload task parameters to queue
 		channel.basic_publish(exchange='',
-			  routing_key='sleep_queue',
+			  routing_key=queue_name,
 			  body=pickled_task,
 			  properties=pika.BasicProperties(
-			  	delivery_mode = 2, # make message persistent
+				delivery_mode = 2, # make message persistent
 			  ))
 
-	connection.close()
-
 	try:
-	    while True:
-	        continue
+		queue_depth = get_queue_depth(channel, queue_name)
+		while queue_depth > 0:
+			time.sleep(2)
+			queue_depth = get_queue_depth(channel, queue_name)
+			continue
 	except KeyboardInterrupt:
-	    print ' [x] Exiting...'
-	    pool.terminate()
-	    pool.join()
+		pass
 
-
-	###############################################################
-
+	print ' [x] Exiting...'
+	connection.close()
+	pool.terminate()
+	pool.join()
 
 #######################################################################
 #
@@ -195,7 +178,7 @@ def single_run(test_dir, single_run_paramteres, max_cores):
 #
 # 	Does a weak scale test with the current weak scale parameters
 #
-def weak_scale_run(test_dir, weak_scale_parameters, max_cores):
+def weak_scale_run(test_dir, max_cores, queue_name, weak_scale_parameters):
 
 	print 'Starting Weak Scale Run:\n'
 
@@ -231,56 +214,78 @@ def weak_scale_run(test_dir, weak_scale_parameters, max_cores):
 			begin_time = time.time()
 
 			# Find available dir name for the current run with jobs_per_core
-			run_dir_num = 1
-			run_dir 	= '%s/run_%03d' % (weak_scale_test_dir, run_dir_num)
-			while (os.path.isdir(run_dir)):
-				run_dir_num += 1
-				run_dir 	= '%s/run_%03d' % (weak_scale_test_dir, run_dir_num)
+			run_dir_num = jobs_per_core
+			run_dir = '%s/run_%03d' % (weak_scale_test_dir, run_dir_num)
+			while (not os.path.exists(run_dir)):
+				try:
+					os.mkdir(run_dir)
+				except (OSError, IOError) as e:
+					run_dir_num += 1
+					run_dir = '%s/run_%03d' % (weak_scale_test_dir, run_dir_num)
 
-			# Create available dir for the current run with jobs_per_core
-			os.mkdir(run_dir)
+			workers = int(pow(2, number_cores))
 
-			###############################################################
+			# Map tasks to processes
+			pool = multiprocessing.Pool(processes=workers)
+
+			# Injects each tasks into a function asynchronously
+			for worker in xrange(workers):
+				pool.apply_async(hire_worker)
+				print ' [x] Worker %d hired' % worker
 
 			# Establish a connection with RabbitMQ server
 			connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
 			channel = connection.channel()
 
-			# creating a 'hello' queue to which message will be delivered
-			channel.queue_declare(queue='sleep_queue', durable=True)
+			# Declare queue to be used in the transfer process
+			channel.queue_declare(queue=queue_name, durable=True)
 
 			total_number_tasks = int(pow(2, jobs_per_core + number_cores))
+			print ' total_number_tasks %d ' % total_number_tasks
 			for i in xrange(total_number_tasks):
 
 				sleep_time 	= 0.1
-				task 		= (sleep_time, run_dir)
-				
+				pipe_dir = run_dir + '/pipe_%03d' % (i)
+
+				task = (sleep_time, pipe_dir)
+
+				try:
+					os.mkdir(pipe_dir)
+				except (OSError, IOError) as e:
+					continue
+
 				# Pickle task
 				pickled_task = pickle.dumps(task)
 
 				# Upload task parameters to queue
 				channel.basic_publish(exchange='',
-					  routing_key='sleep_queue',
-					  body=stream,
+					  routing_key=queue_name,
+					  body=pickled_task,
 					  properties=pika.BasicProperties(
-					  	delivery_mode = 2, # make message persistent
+						delivery_mode = 2, # make message persistent
 					  ))
 
 			connection.close()
 
-			###############################################################
+			try:
+				while True:
+					time.sleep(0.1)
+					continue
+			except KeyboardInterrupt:
+				print ' [x] Exiting...'
+				pool.terminate()
+				pool.join()
 
-			# assigns the tasks to cores
-			assign_tasks(number_cores, worker_sleeps)
+			###############################################################
 
 			# End timer
 			end_time = time.time()
 			run_time = end_time - begin_time
 
 			csv_file = run_dir + '/data.csv'
+			data = [pow(2, number_cores), pow(2, jobs_per_core), run_time]
 
 			# Export data into csv_file
-			data = [pow(2, number_cores), pow(2, jobs_per_core), run_time]
 			append_csv(csv_file, data)
 
 
@@ -290,7 +295,7 @@ def weak_scale_run(test_dir, weak_scale_parameters, max_cores):
 #
 # 	Does a strong scale test with the current strong scale parameters
 #
-def strong_scale_run(test_dir, strong_scale_parameters, max_cores):
+def strong_scale_run(test_dir, max_cores, queue_name, strong_scale_parameters):
 
 	print 'Starting Strong Scale Run:\n'
 
@@ -343,33 +348,65 @@ def strong_scale_run(test_dir, strong_scale_parameters, max_cores):
 
 			###############################################################
 
-			# Create tasks
-			tasks = list()
+			# Establish a connection with RabbitMQ server
+			connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+			channel = connection.channel()
+
+			# creating a 'hello' queue to which message will be delivered
+			channel.queue_declare(queue=queue_name, durable=True)
+
 			total_number_tasks = int(pow(2, number_cores + number_jobs))
-			for pipe_num in xrange(1, total_number_tasks+1):
+			for i in xrange(total_number_tasks):
 
-				sleep_time 	= 1
-				pipe_folder = run_dir + '/pipe_%d' % (pipe_num)
-				task 		= (sleep_time, pipe_folder)
+				sleep_time 	= 0.1
+				pipe_dir = run_dir + '/pipe_%03d' % (i)
 
-				tasks.append(task)
+				task 		= (sleep_time, pipe_dir)
+
+				try:
+					os.mkdir(pipe_dir)
+				except (OSError, IOError) as e:
+					continue
+
+				# Pickle task
+				pickled_task = pickle.dumps(task)
+
+				# Upload task parameters to queue
+				channel.basic_publish(exchange='',
+					  routing_key=queue_name,
+					  body=pickled_task,
+					  properties=pika.BasicProperties(
+						delivery_mode = 2, # make message persistent
+					  ))
+
+			connection.close()
+
+			try:
+				while True:
+					continue
+			except KeyboardInterrupt:
+				print ' [x] Exiting...'
+				pool.terminate()
+				pool.join()
 
 			###############################################################
-			
-			# assigns the tasks to cores
-			assign_tasks(number_cores, worker_sleeps)
 
 			# End timer
 			end_time = time.time()
 			run_time = end_time - begin_time
 
 			csv_file = run_dir + '/data_%d.csv' % (run_dir_num)
+			data = [pow(2, number_jobs), pow(2, number_cores), run_time]
 
 			# Export data into csv_file
-			data = [pow(2, number_jobs), pow(2, number_cores), run_time]
 			append_csv(csv_file, data)
 
 
+#######################################################################
+#
+# 	get_weak_scale_test_dir Function
+#
+# 	Returns the output for the weak scale test
 #######################################################################
 #
 # 	get_singel_run_dir Function
@@ -389,11 +426,6 @@ def get_single_run_dir(test_dir):
 	return single_run_dir
 
 
-#######################################################################
-#
-# 	get_weak_scale_test_dir Function
-#
-# 	Returns the output for the weak scale test
 #
 def get_weak_scale_test_dir(test_dir):
 
@@ -425,3 +457,29 @@ def get_strong_scale_test_dir(test_dir):
 		print 'Strong scale test directory already exists'
 
 	return strong_scale_test_dir
+
+#######################################################################
+#
+# 	assign_tasks Function
+#
+# 	populate cores with pipelines
+#
+def assign_tasks(number_cores, worker):
+
+	workers = int(pow(2, number_cores))
+
+	# Map tasks to processes
+	pool = multiprocessing.Pool(processes=workers)
+
+	# Injects each tasks into a function asynchronously
+	for worker in xrange(workers):
+		pool.apply_async(hire_worker)
+
+	try:
+		while True:
+			continue
+	except KeyboardInterrupt:
+		print ' [x] Exiting'
+		pool.terminate()
+		pool.join()
+

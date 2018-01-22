@@ -18,18 +18,21 @@ def main():
 
     # Acquire machine name for the correct parameters
     machine_name        = input_file['machine']
-    input_parameters    = input_file[machine_name + '_parameters']
+    parameters          = input_file[machine_name + '_parameters']
+
+    # Queue parameters
+    queue = parameters['queue_name']
 
     # Acquire machine and test parameters
     # output_dir            : directory for the output
     # weak_scale_test       : testing weak scaling
     # strong_scale_test     : testing strong scaling
     # max_cores             : max cores of the machine
-    output_dir              = input_parameters['output']
-    single_test_parameters  = input_parameters['single_test']
-    weak_scale_parameters   = input_parameters['weak_scale_test']
-    strong_scale_parameters = input_parameters['strong_scale_test']
-    max_cores               = input_parameters['max_cores']
+    output_dir              = parameters['output']
+    single_test_parameters  = parameters['single_test']
+    weak_scale_parameters   = parameters['weak_scale_test']
+    strong_scale_parameters = parameters['strong_scale_test']
+    max_cores               = parameters['max_cores']
 
     # Check that output_dir exists
     if not os.path.isdir(output_dir):
@@ -52,15 +55,15 @@ def main():
 
     # Run single test
     if single_test_parameters['run_test']:
-        single_run(test_dir, single_test_parameters, max_cores)
+        single_run(test_dir, max_cores, queue, single_test_parameters)
     else:
         # Run Weak Scale Tests
         if weak_scale_parameters['run_test']:
-            weak_scale_run(test_dir, weak_scale_parameters, max_cores)
+            weak_scale_run(test_dir, max_cores, queue, weak_scale_parameters)
 
         # Run Strong Scale Tests
         if strong_scale_parameters['run_test']:
-            strong_scale_run(test_dir, strong_scale_parameters, max_cores)
+            strong_scale_run(test_dir, max_cores, queue, strong_scale_parameters)
 
 
 if __name__ == '__main__':
