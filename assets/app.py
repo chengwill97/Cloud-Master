@@ -21,9 +21,7 @@ def main():
     parameters          = input_file[machine_name + '_parameters']
 
     # Server parameters
-    server = parameters['server']
-    task_queue = parameters['task_queue']
-    count_queue = parameters['count_queue']
+    message_server = parameters['message_server']
 
     # Acquire machine and test parameters
 
@@ -59,15 +57,15 @@ def main():
 
     # Run single test
     if single_test_parameters['run_test']:
-        single_run(test_dir, server, task_queue, count_queue, single_test_parameters, max_cores)
+        single_run(test_dir, message_server, single_test_parameters, max_cores)
     else:
         # Run Weak Scale Tests
         if weak_scale_parameters['run_test']:
-            weak_scale_run(test_dir, server, task_queue, weak_scale_parameters, max_cores)
+            weak_scale_run(test_dir, message_server, weak_scale_parameters, max_cores)
 
         # Run Strong Scale Tests
         if strong_scale_parameters['run_test']:
-            strong_scale_run(test_dir, server, task_queue, strong_scale_parameters, max_cores)
+            strong_scale_run(test_dir, message_server, strong_scale_parameters, max_cores)
 
 
 if __name__ == '__main__':

@@ -2,29 +2,31 @@
 	"machine" : "MBP15",
 
 	"MBP15_parameters" : {
-		"server" : "localhost",
-		"task_queue" : "sleep_tasks",
-		"count_queue" : "count_tasks",
+		"message_server" : {
+			"server" : "localhost",
+			"task_queue" : "sleep_tasks",
+			"count_queue" : "count_tasks"
+		},
 		"max_cores" : 4,
 		"output" : "/Users/WillC/Documents/Rutgers/Research/RADICAL/Minions/data/output",
 		"single_test" : {
 			"run_test" 				: true,
-			"number_cores" 			: 2,
-			"number_jobs"			: 2
+			"number_cores" 			: 0,
+			"number_jobs"			: 0
 		},
 		"weak_scale_test" : {
 			"run_test" 				: true,
 			"begin_number_cores" 	: 0,
-			"end_number_cores" 		: 0,
+			"end_number_cores" 		: 2,
 			"begin_jobs_per_core" 	: 0,
-			"end_jobs_per_core" 	: 1
+			"end_jobs_per_core" 	: 0
 		},
 		"strong_scale_test" : {
-			"run_test" 				: false,
+			"run_test" 				: true,
 			"begin_number_jobs" 	: 0,
-			"end_number_jobs" 		: 0,
+			"end_number_jobs" 		: 1,
 			"begin_number_cores" 	: 0,
-			"end_number_cores" 		: 0
+			"end_number_cores" 		: 1
 		}
 	},
 	"MBP11_parameters" : {
