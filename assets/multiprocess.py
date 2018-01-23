@@ -220,13 +220,13 @@ def single_run(test_dir, message_server, single_run_parameters, max_cores):
 		connection.close()
 		pool.terminate()
 		pool.join()
-		return run_dir
 
 	print ' [x] Exiting gracefully...'
 	connection.close()
 	pool.terminate()
 	pool.join()		
 	return run_dir
+
 
 #######################################################################
 #
@@ -368,11 +368,6 @@ def strong_scale_run(test_dir, message_server, strong_scale_parameters, max_core
 
 #######################################################################
 #
-# 	get_weak_scale_test_dir Function
-#
-# 	Returns the output for the weak scale test
-#######################################################################
-#
 # 	get_singel_run_dir Function
 #
 # 	Returns the output for the single run
@@ -400,7 +395,11 @@ def get_single_run_dir(test_dir):
 	return single_run_dir
 
 
+#######################################################################
 #
+# 	get_weak_scale_test_dir Function
+#
+# 	Returns the output for the weak scale test
 def get_weak_scale_test_dir(test_dir):
 
 	weak_scale_test_dir = test_dir + '/weak_scale_output'
