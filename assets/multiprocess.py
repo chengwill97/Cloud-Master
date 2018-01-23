@@ -4,6 +4,7 @@ import csv
 import os
 import pickle
 import pika
+import random
 
 from math import pow
 
@@ -18,6 +19,18 @@ from dataIO import append_csv
 from pipeline import Pipeline
 
 
+def pop_remaining(remaining_queue):
+
+	connection = pika.BlockingConnection()
+	channel = connection.channel()
+	method_frame, header_frame, body = channel.basic_get(remaining_queue)
+	if method_frame:
+	    # print method_frame, header_frame, body
+	    channel.basic_ack(method_frame.delivery_tag)
+	else:
+	    print 'No message returned'
+
+
 #######################################################################
 #
 # 	worker Function
@@ -27,7 +40,10 @@ from pipeline import Pipeline
 #
 def worker_sleeps(ch, method, properties, body):
 	# Unpickle data
-	data = pickle.loads(body)
+	unpickle = pickle.loads(body)
+
+	data = unpickle['data']
+	count_queue = unpickle['count_queue']
 
 	sleep_time, run_dir = data
 	process_name   = multiprocessing.current_process().name
@@ -61,6 +77,8 @@ def worker_sleeps(ch, method, properties, body):
 
 	ch.basic_ack(delivery_tag=method.delivery_tag)
 
+	pop_remaining(count_queue)
+
 
 #######################################################################
 #
@@ -78,7 +96,7 @@ def hire_worker(queue_name):
 	channel = connection.channel()
 
 	channel.queue_declare(queue=queue_name, durable=True)
-	print 'consuming'
+
 	# Sets maximum number of pre-assigned tasks to 1
 	channel.basic_qos(prefetch_count=1)
 
@@ -90,7 +108,7 @@ def hire_worker(queue_name):
 	try:
 		channel.start_consuming()
 	except KeyboardInterrupt:
-		pass
+		connection.close()
 
 
 #######################################################################
@@ -110,12 +128,12 @@ def get_queue_depth(ch, queue_name):
 #
 # 	Does a single test with the current parameteres
 #
-def single_run(test_dir, max_cores, queue_name, single_run_paramteres):
+def single_run(test_dir, server, task_queue, count_queue, single_run_parameters, max_cores):
 
-	NUMBER_CORES 	= single_run_paramteres['number_cores']
-	NUMBER_JOBS		= single_run_paramteres['number_jobs']
+	NUMBER_CORES 	= single_run_parameters['number_cores']
+	NUMBER_JOBS		= single_run_parameters['number_jobs']
 
-	print 'Starting Single Run with %d cores' % NUMBER_CORES
+	print 'Starting Single Run with %02d cores' % NUMBER_CORES
 
 	# Check that parameters are valid
 	if NUMBER_CORES > max_cores or NUMBER_CORES < 0:
@@ -131,46 +149,77 @@ def single_run(test_dir, max_cores, queue_name, single_run_paramteres):
 
 	# Injects each tasks into a function asynchronously
 	for worker in xrange(workers):
-		pool.apply_async(hire_worker,[queue_name])
-		print 'Worker %d hired' % worker
+		pool.apply_async(hire_worker,[task_queue])
+		print 'Worker #%02d hired' % worker
 
 	# Establish a connection with RabbitMQ server
-	connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+	connection = pika.BlockingConnection(pika.ConnectionParameters(server))
 	channel = connection.channel()
 
 	# Declare queue to be used in the transfer process
-	channel.queue_declare(queue=queue_name, durable=True)
+	channel.queue_declare(queue=task_queue, durable=True)
+
+	# Declare queue to be used to count number of remaining jobs
+	channel.queue_declare(queue=count_queue, durable=True)
 
 	total_number_tasks = int(pow(2, NUMBER_JOBS))
-	for i in xrange(total_number_tasks):
-
-		sleep_time 	= 0.1
-		task 		= (sleep_time, run_dir)
-		
-		# Pickle task
-		pickled_task = pickle.dumps(task)
-
-		# Upload task parameters to queue
-		channel.basic_publish(exchange='',
-			  routing_key=queue_name,
-			  body=pickled_task,
-			  properties=pika.BasicProperties(
-				delivery_mode = 2, # make message persistent
-			  ))
+	number_cores = int(pow(2, NUMBER_CORES))
 
 	try:
-		queue_depth = get_queue_depth(channel, queue_name)
-		while queue_depth > 0:
-			time.sleep(2)
-			queue_depth = get_queue_depth(channel, queue_name)
-			continue
+		for i in xrange(total_number_tasks):
+			for j in xrange(number_cores):
+
+				i += 1
+
+				sleep_time 	= 0.1
+				task 		= (sleep_time, run_dir)
+				
+				# Pickle task
+				pickled_task = pickle.dumps(
+					{'data': task,
+					 'count_queue' : count_queue
+					})
+
+				# Upload task parameters to queue
+				channel.basic_publish(exchange='',
+					  routing_key=task_queue,
+					  body=pickled_task,
+					  properties=pika.BasicProperties(
+						delivery_mode = 2, # make message persistent
+					  ))
+
+				channel.basic_publish(exchange='',
+					  routing_key=count_queue,
+					  body='job',
+					  properties=pika.BasicProperties(
+						delivery_mode = 2, # make message persistent
+					  ))
+
+			# Wait until all assigned tasks are finished
+			while get_queue_depth(channel, count_queue) > 0:
+				time.sleep(0.1)
+				# pop_remaining(count_queue)
+				# print 'queue depth %d' % get_queue_depth(channel, count_queue)
+
 	except KeyboardInterrupt:
-		pass
+		connection.close()
+		pool.terminate()
+		pool.join()
 
 	print ' [x] Exiting...'
 	connection.close()
 	pool.terminate()
-	pool.join()
+	pool.join()		
+	# try:
+	# 	while True:
+	# 		time.sleep(2)
+	# 		continue
+	# except KeyboardInterrupt:
+	# 	connection.close()
+	# 	pool.terminate()
+	# 	pool.join()		
+
+
 
 #######################################################################
 #
@@ -178,7 +227,7 @@ def single_run(test_dir, max_cores, queue_name, single_run_paramteres):
 #
 # 	Does a weak scale test with the current weak scale parameters
 #
-def weak_scale_run(test_dir, max_cores, queue_name, weak_scale_parameters):
+def weak_scale_run(test_dir, server, queue_name, weak_scale_parameters, max_cores):
 
 	print 'Starting Weak Scale Run:\n'
 
@@ -295,7 +344,7 @@ def weak_scale_run(test_dir, max_cores, queue_name, weak_scale_parameters):
 #
 # 	Does a strong scale test with the current strong scale parameters
 #
-def strong_scale_run(test_dir, max_cores, queue_name, strong_scale_parameters):
+def strong_scale_run(test_dir, server, queue_name, strong_scale_parameters, max_cores):
 
 	print 'Starting Strong Scale Run:\n'
 

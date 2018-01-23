@@ -2,13 +2,15 @@
 	"machine" : "MBP15",
 
 	"MBP15_parameters" : {
+		"server" : "localhost",
+		"task_queue" : "sleep_tasks",
+		"count_queue" : "count_tasks",
 		"max_cores" : 4,
-		"queue_name" : "sleep_tasks",
 		"output" : "/Users/WillC/Documents/Rutgers/Research/RADICAL/Minions/data/output",
 		"single_test" : {
 			"run_test" 				: true,
 			"number_cores" 			: 2,
-			"number_jobs"			: 8
+			"number_jobs"			: 2
 		},
 		"weak_scale_test" : {
 			"run_test" 				: true,
