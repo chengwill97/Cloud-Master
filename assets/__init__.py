@@ -1,4 +1,9 @@
-try:
-	print ge
-except:
-	print 'could not print'
+import pika
+
+connection = pika.BlockingConnection(pika.ConnectionParameters(
+               'localhost'))
+channel = connection.channel()
+
+channel.queue_delete(queue='count_tasks')
+
+connection.close()
