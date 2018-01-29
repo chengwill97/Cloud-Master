@@ -21,7 +21,11 @@ from pipeline import Pipeline
 
 def pop_remaining(remaining_queue):
 
-	connection = pika.BlockingConnection()
+	url = os.environ.get('CLOUDAMQP_URL', 'amqp://guest:guest@localhost/%2f')
+	params = pika.URLParameters(url)
+	params.socket_timeout = 5
+	connection = pika.BlockingConnection(params) # Connect to CloudAMQP	
+
 	channel = connection.channel()
 	method_frame, header_frame, body = channel.basic_get(remaining_queue)
 	if method_frame:
@@ -39,6 +43,7 @@ def pop_remaining(remaining_queue):
 # 	Simulate -> Analyze -> Converge sequence
 #
 def worker_sleeps(ch, method, properties, body):
+
 	# Unpickle data
 	unpickle = pickle.loads(body)
 
@@ -89,10 +94,11 @@ def worker_sleeps(ch, method, properties, body):
 def hire_worker(queue_name):
 
 	process_name = multiprocessing.current_process().name
-
 	# Establish connection with the RabbitMQ server
-	connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-
+	url = os.environ.get('CLOUDAMQP_URL', 'amqp://guest:guest@localhost/%2f')
+	params = pika.URLParameters(url)
+	params.socket_timeout = 5
+	connection = pika.BlockingConnection(params) # Connect to CloudAMQP
 	channel = connection.channel()
 
 	channel.queue_declare(queue=queue_name, durable=True)
@@ -156,19 +162,37 @@ def single_run(test_dir, message_server, single_run_parameters, max_cores):
 	for worker in xrange(workers):
 		pool.apply_async(hire_worker,[task_queue])
 		print 'Worker #%02d hired' % worker
+	
+	'''
+	Set the connection parameters to connect to 'server' on port 5672
+	on the / virtual host using the username "guest" and password "guest"
+	and establish a connection with RabbitMQ server
+	'''
+	url = os.environ.get('CLOUDAMQP_URL', 'amqp://guest:guest@localhost/%2f')
+	print url
+	params = pika.URLParameters(url)
+	params.socket_timeout = 5
+	connection = pika.BlockingConnection(params) # Connect to CloudAMQP
 
-	# Establish a connection with RabbitMQ server
-	connection = pika.BlockingConnection(pika.ConnectionParameters(server))
+	# credentials = pika.PlainCredentials('cloud_user', 'cloud_password')
+	# connection_parameters = pika.ConnectionParameters(server,
+	#                                        5672,
+	#                                        '/',
+	#                                        credentials)
+	# connection = pika.BlockingConnection(connection_parameters)
+
 	channel = connection.channel()
 
-	# Declare queue to be used in the transfer process
+	# Declare queue to be used in the input transfer process
 	channel.queue_declare(queue=task_queue, durable=True)
 
-	# Declare queue to be used to count number of remaining jobs
+	# Declare queue to be used to count number of remaining running jobs
 	channel.queue_declare(queue=count_queue, durable=True)
 
-	total_number_tasks = int(pow(2, NUMBER_JOBS))
+	total_number_jobs = int(pow(2, NUMBER_JOBS))
 	number_cores = int(pow(2, NUMBER_CORES))
+
+	print NUMBER_JOBS
 
 	try:
 
@@ -180,14 +204,17 @@ def single_run(test_dir, message_server, single_run_parameters, max_cores):
 		allowed to be loaded into the queue
 		is equal to the number of cores set.
 		'''
+		task_count = 0
+		for i in xrange(total_number_jobs):
 
-		for i in xrange(total_number_tasks):
+			print "%d tasks left", i
 
 			for j in xrange(number_cores):
 
-				i += 1
+				print "%d tasks remaining....................................", total_number_jobs - task_count
+				task_count += 1
 
-				sleep_time 	= 0.1
+				sleep_time 	= 1
 				task 		= (sleep_time, run_dir)
 				
 				# Pickle task
@@ -212,11 +239,15 @@ def single_run(test_dir, message_server, single_run_parameters, max_cores):
 						delivery_mode = 2, # make message persistent
 					  ))
 
+
 			# Waits until all tasks are completed
-			while get_queue_depth(channel, count_queue) > 0:
-				time.sleep(0.1)
+			while get_queue_depth(channel, task_queue) + get_queue_depth(channel, count_queue) > 0:
+				print "task_queue length: %d\ncount_queue length:%d" % (get_queue_depth(channel, task_queue), get_queue_depth(channel, count_queue))
+				time.sleep(1.3)
 
 	except KeyboardInterrupt:
+		channel.queue_delete(queue=count_queue)
+		channel.queue_delete(queue=task_queue)
 		connection.close()
 		pool.terminate()
 		pool.join()

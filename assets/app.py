@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#! /home/willc97/bin/python
 
 import os
 
@@ -54,6 +54,8 @@ def main():
     # Copy test parameters into test folder
     copy_parameters_file = test_dir + '/parameters_%03d.json' % test_dir_num
     write_json(copy_parameters_file, input_file)
+
+    os.environ['CLOUDAMQP_URL'] = 'amqp://tcmpsklz:apUNGCdHdsOJ8PI3xTKnVSX6n4g-Ax9t@salamander.rmq.cloudamqp.com/tcmpsklz'
 
     # Run single test
     if single_test_parameters['run_test']:
