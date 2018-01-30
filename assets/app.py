@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#! /home/willc97/bin/python
 
 import os
 
@@ -38,7 +38,7 @@ def main():
 
     # Check that output_dir exists
     if not os.path.isdir(output_dir):
-        print 'output directory does not exist for machine %s' % machine_name
+        print ' [x] output directory does not exist for machine %s' % machine_name
         exit(1)
 
     # Find available dir name for this test in output_dir
@@ -55,6 +55,8 @@ def main():
     copy_parameters_file = test_dir + '/parameters_%03d.json' % test_dir_num
     write_json(copy_parameters_file, input_file)
 
+    os.environ['CLOUDAMQP_URL'] = 'amqp://tcmpsklz:apUNGCdHdsOJ8PI3xTKnVSX6n4g-Ax9t@salamander.rmq.cloudamqp.com/tcmpsklz'
+
     # Run single test
     if single_test_parameters['run_test']:
         single_run(test_dir, message_server, single_test_parameters, max_cores)
@@ -66,6 +68,9 @@ def main():
         # Run Strong Scale Tests
         if strong_scale_parameters['run_test']:
             strong_scale_run(test_dir, message_server, strong_scale_parameters, max_cores)
+
+    print ' [x] %s finished...' % (test_dir)
+    print ' [x] Exiting gracefully'
 
 
 if __name__ == '__main__':

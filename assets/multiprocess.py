@@ -19,16 +19,20 @@ from dataIO import append_csv
 from pipeline import Pipeline
 
 
-def pop_remaining(remaining_queue):
+def pop_remaining(channel, remaining_queue):
 
-	connection = pika.BlockingConnection()
-	channel = connection.channel()
+	# url = os.environ.get('CLOUDAMQP_URL', 'amqp://guest:guest@localhost/%2f')
+	# params = pika.URLParameters(url)
+	# params.socket_timeout = 5
+	# connection = pika.BlockingConnection(params) # Connect to CloudAMQP	
+
+	# channel = connection.channel()
 	method_frame, header_frame, body = channel.basic_get(remaining_queue)
 	if method_frame:
 	    # print method_frame, header_frame, body
 	    channel.basic_ack(method_frame.delivery_tag)
 	else:
-	    print 'No message returned'
+	    print ' [x] No message returned'
 
 
 #######################################################################
@@ -39,6 +43,7 @@ def pop_remaining(remaining_queue):
 # 	Simulate -> Analyze -> Converge sequence
 #
 def worker_sleeps(ch, method, properties, body):
+
 	# Unpickle data
 	unpickle = pickle.loads(body)
 
@@ -77,7 +82,7 @@ def worker_sleeps(ch, method, properties, body):
 
 	ch.basic_ack(delivery_tag=method.delivery_tag)
 
-	pop_remaining(count_queue)
+	pop_remaining(ch, count_queue)
 
 
 #######################################################################
@@ -89,10 +94,11 @@ def worker_sleeps(ch, method, properties, body):
 def hire_worker(queue_name):
 
 	process_name = multiprocessing.current_process().name
-
 	# Establish connection with the RabbitMQ server
-	connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-
+	url = os.environ.get('CLOUDAMQP_URL', 'amqp://guest:guest@localhost/%2f')
+	params = pika.URLParameters(url)
+	params.socket_timeout = 5
+	connection = pika.BlockingConnection(params) # Connect to CloudAMQP
 	channel = connection.channel()
 
 	channel.queue_declare(queue=queue_name, durable=True)
@@ -133,15 +139,18 @@ def single_run(test_dir, message_server, single_run_parameters, max_cores):
 	NUMBER_CORES 	= single_run_parameters['number_cores']
 	NUMBER_JOBS		= single_run_parameters['number_jobs']
 
+	total_number_jobs = int(pow(2, NUMBER_JOBS))
+	number_cores = int(pow(2, NUMBER_CORES))
+
 	server 			= message_server['server']
 	task_queue 		= message_server['task_queue']
 	count_queue  	= message_server['count_queue']
 
-	print '\nStarting Single Run with %02d cores' % NUMBER_CORES
+	print ' [x] Starting Single Run with %02d cores' % total_number_jobs
 
 	# Check that parameters are valid
 	if NUMBER_CORES > max_cores or NUMBER_CORES < 0:
-		print 'Error: Number of cores is not valid'
+		print ' [x] Error: Number of cores is not valid'
 		return
 
 	run_dir = get_single_run_dir(test_dir)
@@ -155,20 +164,32 @@ def single_run(test_dir, message_server, single_run_parameters, max_cores):
 	# Injects each tasks into a function asynchronously
 	for worker in xrange(workers):
 		pool.apply_async(hire_worker,[task_queue])
-		print 'Worker #%02d hired' % worker
+		print ' [x] Worker #%02d hired' % worker
+	
+	'''
+	Set the connection parameters to connect to 'server' on port 5672
+	on the / virtual host using the username "guest" and password "guest"
+	and establish a connection with RabbitMQ server
+	'''
+	url = os.environ.get('CLOUDAMQP_URL', 'amqp://guest:guest@localhost/%2f')
+	params = pika.URLParameters(url)
+	params.socket_timeout = 5
+	connection = pika.BlockingConnection(params) # Connect to CloudAMQP
 
-	# Establish a connection with RabbitMQ server
-	connection = pika.BlockingConnection(pika.ConnectionParameters(server))
+	# credentials = pika.PlainCredentials('cloud_user', 'cloud_password')
+	# connection_parameters = pika.ConnectionParameters(server,
+	#                                        5672,
+	#                                        '/',
+	#                                        credentials)
+	# connection = pika.BlockingConnection(connection_parameters)
+
 	channel = connection.channel()
 
-	# Declare queue to be used in the transfer process
+	# Declare queue to be used in the input transfer process
 	channel.queue_declare(queue=task_queue, durable=True)
 
-	# Declare queue to be used to count number of remaining jobs
+	# Declare queue to be used to count number of remaining running jobs
 	channel.queue_declare(queue=count_queue, durable=True)
-
-	total_number_tasks = int(pow(2, NUMBER_JOBS))
-	number_cores = int(pow(2, NUMBER_CORES))
 
 	try:
 
@@ -180,14 +201,17 @@ def single_run(test_dir, message_server, single_run_parameters, max_cores):
 		allowed to be loaded into the queue
 		is equal to the number of cores set.
 		'''
-
-		for i in xrange(total_number_tasks):
+		task_count = 0
+		for i in xrange(total_number_jobs):
 
 			for j in xrange(number_cores):
 
-				i += 1
+				print ' [x] tasks remaining %s %d' % (
+					40*'.', total_number_jobs - task_count)
 
-				sleep_time 	= 0.1
+				task_count += 1
+
+				sleep_time 	= 1
 				task 		= (sleep_time, run_dir)
 				
 				# Pickle task
@@ -212,16 +236,66 @@ def single_run(test_dir, message_server, single_run_parameters, max_cores):
 						delivery_mode = 2, # make message persistent
 					  ))
 
+
+				if total_number_jobs <= task_count:
+					break
+
+			begin_time = time.time()
+
 			# Waits until all tasks are completed
-			while get_queue_depth(channel, count_queue) > 0:
+			while get_queue_depth(channel, task_queue) + get_queue_depth(channel, count_queue) > 0:
+				# print "task_queue length: %d\ncount_queue length:%d" % (get_queue_depth(channel, task_queue), get_queue_depth(channel, count_queue))
 				time.sleep(0.1)
 
+				"""
+				#FIXME
+				Check if queue is timing out. If it is, 
+				then purge queues and go to next experiment
+				"""
+				sleep_time = 1
+				end_time = time.time()
+				if end_time - begin_time >= 60:
+					print ' [x] Exiting due to queue timeout'
+					print ' [x] in run with %d number cores and %d total number of jobs' % (number_cores, total_number_jobs)
+					print ' [x] \nQueues (%s, %s) purging with (%d, %d) items in queue' % (
+						task_queue, 
+						count_queue,
+						get_queue_depth(channel, task_queue), 
+						get_queue_depth(channel, count_queue))
+					channel.queue_purge(queue=count_queue)
+					channel.queue_purge(queue=task_queue)
+					# channel.queue_delete(queue=count_queue)
+					# channel.queue_delete(queue=task_queue)
+					connection.close()
+					pool.terminate()
+					pool.join()
+					
+					return 'Error: Queue Timeout Error'
+
+
+			if total_number_jobs <= task_count:
+				break
+
 	except KeyboardInterrupt:
+
+		print ' [x] Exiting due to KeyboardInterrupt exception'
+		print ' [x] in run with %d number cores and %d total number of jobs' % (number_cores, total_number_jobs)
+		print ' [x] \nQueues (%s, %s) purging with (%d, %d) items in queue' % (
+			task_queue, 
+			count_queue,
+			get_queue_depth(channel, task_queue), 
+			get_queue_depth(channel, count_queue))
+
+		# Reset queues
+		channel.queue_purge(queue=count_queue)
+		channel.queue_purge(queue=task_queue)
+
 		connection.close()
 		pool.terminate()
 		pool.join()
 
-	print ' [x] Exiting gracefully...'
+		return 'Error: KeyboardInterrupt'
+
 	connection.close()
 	pool.terminate()
 	pool.join()		
@@ -236,7 +310,7 @@ def single_run(test_dir, message_server, single_run_parameters, max_cores):
 #
 def weak_scale_run(test_dir, message_server, weak_scale_parameters, max_cores):
 
-	print 'Starting Weak Scale Run:\n'
+	print ' [x] Starting Weak Scale Run:\n'
 
 	BEGIN_NUMBER_CORES 	= weak_scale_parameters['begin_number_cores']
 	END_NUMBER_CORES 	= weak_scale_parameters['end_number_cores'] + 1
@@ -245,26 +319,30 @@ def weak_scale_run(test_dir, message_server, weak_scale_parameters, max_cores):
 
 	# Check that parameters are valid
 	if BEGIN_NUMBER_CORES > END_NUMBER_CORES or BEGIN_NUMBER_CORES < 0:
-		print 'Error: bounds on cores are not valid.'
+		print ' [x] Error: bounds on cores are not valid.'
 		return
 	elif BEGIN_JOBS_PER_CORE > END_JOBS_PER_CORE:
-		print 'Error: jobs_per_core are not valid.'
+		print ' [x] Error: jobs_per_core are not valid.'
 		return
 	elif END_NUMBER_CORES > max_cores:
-		print 'Error: cores exceed max_cores.'
+		print ' [x] Error: cores exceed max_cores.'
 		return
 
 	weak_scale_test_dir = get_weak_scale_test_dir(test_dir)
 
+	csv_file = '%s/data.csv' % weak_scale_test_dir
+	header = ['Test Directory', '2 ^ Number of Cores', '2 ^ Jobs per Cores', 'Run Time']
+	append_csv(csv_file, header)
+
 	# Vary the number of cores
 	for number_cores in xrange(BEGIN_NUMBER_CORES, END_NUMBER_CORES):
 
-		print 'Running weak scale with %d cores' % pow(2, number_cores)
+		print ' [x] Running weak scale with %d cores' % pow(2, number_cores)
 		
 		# Vary the number of jobs per core
 		for jobs_per_core in xrange(BEGIN_JOBS_PER_CORE, END_JOBS_PER_CORE):
 
-			print '\tRunning weak scale with %d jobs per core' % pow(2,  jobs_per_core)
+			print '\t [x] Running weak scale with %d jobs per core' % pow(2,  jobs_per_core)
 
 			single_run_parameters = dict()
 
@@ -276,7 +354,7 @@ def weak_scale_run(test_dir, message_server, weak_scale_parameters, max_cores):
 
 			########################################################
 
-			run_dir = single_run(weak_scale_test_dir,
+			single_run_dir = single_run(weak_scale_test_dir,
 				message_server,
 				single_run_parameters,
 				max_cores)
@@ -287,8 +365,7 @@ def weak_scale_run(test_dir, message_server, weak_scale_parameters, max_cores):
 			end_time = time.time()
 			run_time = end_time - begin_time
 
-			csv_file = '%s/data_.csv' % run_dir
-			data = [pow(2, number_cores), pow(2, jobs_per_core), run_time]
+			data = [single_run_dir, pow(2, number_cores), pow(2, jobs_per_core), run_time]
 
 			# Export data into csv_file
 			append_csv(csv_file, data)
@@ -317,26 +394,30 @@ def strong_scale_run(test_dir, message_server, strong_scale_parameters, max_core
 
 	# Check that parameters are valid
 	if BEGIN_NUMBER_JOBS > END_NUMBER_JOBS or BEGIN_NUMBER_JOBS < 0:
-		print 'Error: bounds on cores are not valid.'
+		print ' [x] Error: bounds on cores are not valid.'
 		return
 	elif BEGIN_NUMBER_CORES > END_NUMBER_CORES or BEGIN_NUMBER_CORES < 0:
-		print 'Error: number_cores are not valid.'
+		print ' [x] Error: number_cores are not valid.'
 		return
 	elif END_NUMBER_CORES > max_cores:
-		print 'Error: cores exceed max_cores.'
+		print ' [x] Error: cores exceed max_cores.'
 		return
 
 	strong_scale_test_dir = get_strong_scale_test_dir(test_dir)
 
+	csv_file = '%s/data.csv' % strong_scale_test_dir
+	header = ['Test Directory', '2 ^ Number of Jobs', '2 ^ Number of Cores', 'Run Time']
+	append_csv(csv_file, header)
+
 	# Vary the number of jobs
 	for number_jobs in xrange(BEGIN_NUMBER_JOBS, END_NUMBER_JOBS):
 
-		print 'Running strong scale with %d jobs' % pow(2, number_jobs)
+		print ' [x] Running strong scale with %d jobs' % pow(2, number_jobs)
 		
 		# Vary the number of cores
 		for number_cores in xrange(BEGIN_NUMBER_CORES, END_NUMBER_CORES):
 
-			print 'Running strong scale with %d cores' % pow(2,  number_cores)
+			print ' [x] Running strong scale with %d cores' % pow(2,  number_cores)
 
 			single_run_parameters = dict()
 
@@ -348,7 +429,7 @@ def strong_scale_run(test_dir, message_server, strong_scale_parameters, max_core
 
 			###############################################################
 
-			run_dir = single_run(strong_scale_test_dir,
+			single_run_dir = single_run(strong_scale_test_dir,
 				message_server,
 				single_run_parameters,
 				max_cores)
@@ -359,8 +440,7 @@ def strong_scale_run(test_dir, message_server, strong_scale_parameters, max_core
 			end_time = time.time()
 			run_time = end_time - begin_time
 
-			csv_file = '%s/data_.csv' % run_dir
-			data = [pow(2, number_jobs), pow(2, number_cores), run_time]
+			data = [single_run_dir, pow(2, number_jobs), pow(2, number_cores), run_time]
 
 			# Export data into csv_file
 			append_csv(csv_file, data)
@@ -389,7 +469,7 @@ def get_single_run_dir(test_dir):
 	try:
 		os.mkdir(single_run_dir)
 	except (OSError, IOError) as e:
-		print 'Single run test directory already exists'
+		print ' [x] Single run test directory already exists'
 		exit(0)
 
 	return single_run_dir
@@ -408,7 +488,7 @@ def get_weak_scale_test_dir(test_dir):
 	try:
 		os.mkdir(weak_scale_test_dir)
 	except (OSError, IOError) as e:
-		print 'Weak scale test directory already exists'
+		print ' [x] Weak scale test directory already exists'
 		exit(0)
 
 	return weak_scale_test_dir
@@ -428,7 +508,7 @@ def get_strong_scale_test_dir(test_dir):
 	try:
 		os.mkdir(strong_scale_test_dir)
 	except (OSError, IOError) as e:
-		print 'Strong scale test directory already exists'
+		print ' [x] Strong scale test directory already exists'
 		exit(0)
 
 	return strong_scale_test_dir

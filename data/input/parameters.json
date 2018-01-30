@@ -1,6 +1,33 @@
 {
-	"machine" : "MBP15",
-
+	"machine" : "Comet", 
+	"Comet_parameters" : {
+		"message_server" : {
+			"server" : "nwk-97-80.nwk.ruw.rutgers.edu",
+			"task_queue" : "sleep_tasks",
+			"count_queue" : "count_tasks"
+		},
+		"max_cores" : 24,
+		"output" : "/home/willc97/Cloud_Master/data/output",
+		"single_test" : {
+			"run_test" 				: false,
+			"number_cores" 			: 0,
+			"number_jobs"			: 0
+		},
+		"weak_scale_test" : {
+			"run_test" 				: true,
+			"begin_number_cores" 	: 0,
+			"end_number_cores" 		: 4,
+			"begin_jobs_per_core" 	: 0,
+			"end_jobs_per_core" 	: 2
+		},
+		"strong_scale_test" : {
+			"run_test" 				: true,
+			"begin_number_jobs" 	: 0,
+			"end_number_jobs" 		: 10,
+			"begin_number_cores" 	: 0,
+			"end_number_cores" 		: 4
+		}
+	},
 	"MBP15_parameters" : {
 		"message_server" : {
 			"server" : "localhost",
@@ -8,7 +35,7 @@
 			"count_queue" : "count_tasks"
 		},
 		"max_cores" : 4,
-		"output" : "/Users/WillC/Documents/Rutgers/Research/RADICAL/Minions/data/output",
+		"output" : "/Users/WillC/Documents/Rutgers/Research/RADICAL/Cloud_Master/data/output",
 		"single_test" : {
 			"run_test" 				: true,
 			"number_cores" 			: 0,
@@ -31,7 +58,7 @@
 	},
 	"MBP11_parameters" : {
 		"max_cores" : 1,
-		"output" : "/Users/willcheng2/Google_Drive/Rutgers/Research/RADICAL/Minions/data/output",
+		"output" : "/Users/willcheng2/Google_Drive/Rutgers/Research/RADICAL/Cloud_Master/data/output",
 		"single_test" : {
 			"run_test" 				: true,
 			"number_cores" 			: 0,

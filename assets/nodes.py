@@ -14,7 +14,7 @@ class SimulationNode:
 
     def simulate(self):
         time.sleep(self.sleep_time)
-        print '\t' + '%s: simulating for %d second(s)' % (self.process_name, self.sleep_time)
+        # print '\t' + '%s: simulating for %d second(s)' % (self.process_name, self.sleep_time)
         return '%s simulated successfully' % self.process_name
 
 
@@ -31,7 +31,7 @@ class AnalysisNode:
 
     def analyze(self):
         time.sleep(self.sleep_time)
-        print 2*'\t' +  '%s: analyzing for %d second(s)' % (self.process_name, self.sleep_time)
+        # print 2*'\t' +  '%s: analyzing for %d second(s)' % (self.process_name, self.sleep_time)
         return '%s analyzed successfully' % self.process_name
 
 
@@ -47,6 +47,6 @@ class ConvergenceNode:
 
     def converge(self):
         time.sleep(self.sleep_time)
-        print 3*'\t' + '\t%s: converging for %d second(s)' % (self.process_name, self.sleep_time)
+        # print 3*'\t' + '\t%s: converging for %d second(s)' % (self.process_name, self.sleep_time)
         return '%s converged successfully' % self.process_name
 
