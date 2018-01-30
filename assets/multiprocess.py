@@ -21,12 +21,12 @@ from pipeline import Pipeline
 
 def pop_remaining(channel, remaining_queue):
 
-	# url = os.environ.get('CLOUDAMQP_URL', 'amqp://guest:guest@localhost/%2f')
-	# params = pika.URLParameters(url)
-	# params.socket_timeout = 5
-	# connection = pika.BlockingConnection(params) # Connect to CloudAMQP	
+	url = os.environ.get('CLOUDAMQP_URL', 'amqp://guest:guest@localhost/%2f')
+	params = pika.URLParameters(url)
+	params.socket_timeout = 5
+	connection = pika.BlockingConnection(params) # Connect to CloudAMQP	
 
-	# channel = connection.channel()
+	channel = connection.channel()
 	method_frame, header_frame, body = channel.basic_get(remaining_queue)
 	if method_frame:
 	    # print method_frame, header_frame, body
@@ -191,6 +191,9 @@ def single_run(test_dir, message_server, single_run_parameters, max_cores):
 	# Declare queue to be used to count number of remaining running jobs
 	channel.queue_declare(queue=count_queue, durable=True)
 
+	total_number_jobs = int(pow(2, NUMBER_JOBS))
+	number_cores = int(pow(2, NUMBER_CORES))
+
 	try:
 
 		'''
@@ -235,7 +238,6 @@ def single_run(test_dir, message_server, single_run_parameters, max_cores):
 					  properties=pika.BasicProperties(
 						delivery_mode = 2, # make message persistent
 					  ))
-
 
 				if total_number_jobs <= task_count:
 					break
