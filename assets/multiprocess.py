@@ -345,7 +345,7 @@ def weak_scale_run(test_dir, message_server, weak_scale_parameters, max_cores):
 			single_run_parameters = dict()
 
 			single_run_parameters['number_cores'] 	= number_cores
-			single_run_parameters['number_jobs']	= number_cores * jobs_per_core 
+			single_run_parameters['number_jobs']	= number_cores + jobs_per_core 
 
 			# Start timer
 			begin_time = time.time()
@@ -363,7 +363,10 @@ def weak_scale_run(test_dir, message_server, weak_scale_parameters, max_cores):
 			end_time = time.time()
 			run_time = end_time - begin_time
 
-			data = [single_run_dir, pow(2, number_cores), pow(2, jobs_per_core), run_time]
+			data = [single_run_dir,
+				pow(2, number_cores),
+				pow(2, jobs_per_core),
+				run_time]
 
 			# Export data into csv_file
 			append_csv(csv_file, data)
@@ -380,9 +383,9 @@ def strong_scale_run(test_dir, message_server, strong_scale_parameters, max_core
 	print 'Starting Strong Scale Run:\n'
 
 	BEGIN_NUMBER_JOBS 	= strong_scale_parameters['begin_number_jobs']
-	END_NUMBER_JOBS 	= strong_scale_parameters['end_number_jobs']
+	END_NUMBER_JOBS 	= strong_scale_parameters['end_number_jobs']+1
 	BEGIN_NUMBER_CORES 	= strong_scale_parameters['begin_number_cores']
-	END_NUMBER_CORES 	= strong_scale_parameters['end_number_cores']
+	END_NUMBER_CORES 	= strong_scale_parameters['end_number_cores']+1
 
 	# Check that parameters are valid
 	if BEGIN_NUMBER_CORES == END_NUMBER_CORES:
@@ -415,7 +418,7 @@ def strong_scale_run(test_dir, message_server, strong_scale_parameters, max_core
 		# Vary the number of cores
 		for number_cores in xrange(BEGIN_NUMBER_CORES, END_NUMBER_CORES):
 
-			print ' [x] Running strong scale with %d cores' % pow(2,  number_cores)
+			print '\t [x] Running strong scale with %d cores' % pow(2,  number_cores)
 
 			single_run_parameters = dict()
 
@@ -438,7 +441,10 @@ def strong_scale_run(test_dir, message_server, strong_scale_parameters, max_core
 			end_time = time.time()
 			run_time = end_time - begin_time
 
-			data = [single_run_dir, pow(2, number_jobs), pow(2, number_cores), run_time]
+			data = [single_run_dir,
+				pow(2, number_jobs),
+				pow(2, number_cores),
+				run_time]
 
 			# Export data into csv_file
 			append_csv(csv_file, data)
