@@ -142,7 +142,6 @@ def single_run(test_dir, message_server, single_run_parameters, max_cores):
 	total_number_jobs = int(pow(2, NUMBER_JOBS))
 	number_cores = int(pow(2, NUMBER_CORES))
 
-	server 			= message_server['server']
 	task_queue 		= message_server['task_queue']
 	count_queue  	= message_server['count_queue']
 
@@ -190,9 +189,6 @@ def single_run(test_dir, message_server, single_run_parameters, max_cores):
 
 	# Declare queue to be used to count number of remaining running jobs
 	channel.queue_declare(queue=count_queue, durable=True)
-
-	total_number_jobs = int(pow(2, NUMBER_JOBS))
-	number_cores = int(pow(2, NUMBER_CORES))
 
 	try:
 
