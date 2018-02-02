@@ -26,7 +26,6 @@ def pop_remaining(channel, remaining_queue):
 	params.socket_timeout = 5
 	connection = pika.BlockingConnection(params) # Connect to CloudAMQP	
 
-	channel = connection.channel()
 	method_frame, header_frame, body = channel.basic_get(remaining_queue)
 	if method_frame:
 	    # print method_frame, header_frame, body
@@ -145,7 +144,7 @@ def single_run(test_dir, message_server, single_run_parameters, max_cores):
 	task_queue 		= message_server['task_queue']
 	count_queue  	= message_server['count_queue']
 
-	print ' [x] Starting Single Run with %02d cores' % total_number_jobs
+	print ' [s] Starting Single Run with %02d jobs and %02d cores' % (total_number_jobs, number_cores)
 
 	# Check that parameters are valid
 	if NUMBER_CORES > max_cores or NUMBER_CORES < 0:
@@ -188,7 +187,7 @@ def single_run(test_dir, message_server, single_run_parameters, max_cores):
 	channel.queue_declare(queue=task_queue, durable=True)
 
 	# Declare queue to be used to count number of remaining running jobs
-	channel.queue_declare(queue=count_queue, durable=True)
+	channel.queue_declare(queue=count_queue)
 
 	try:
 
