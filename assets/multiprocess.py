@@ -101,7 +101,7 @@ def hire_worker(queue_name):
 	connection = pika.BlockingConnection(params) # Connect to CloudAMQP
 	channel = connection.channel()
 
-	channel.queue_declare(queue=queue_name, durable=True)
+	channel.queue_declare(queue=queue_name)
 
 	# Sets maximum number of pre-assigned tasks to 1
 	channel.basic_qos(prefetch_count=1)

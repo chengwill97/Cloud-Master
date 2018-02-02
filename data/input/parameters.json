@@ -20,12 +20,12 @@
 			"begin_number_cores" 	: 0,
 			"end_number_cores" 		: 4,
 			"begin_jobs_per_core" 	: 0,
-			"end_jobs_per_core" 	: 10
+			"end_jobs_per_core" 	: 7
 		},
 		"strong_scale_test" : {
-			"run_test" 				: true,
+			"run_test" 				: false,
 			"begin_number_jobs" 	: 0,
-			"end_number_jobs" 		: 10,
+			"end_number_jobs" 		: 8,
 			"begin_number_cores" 	: 0,
 			"end_number_cores" 		: 4
 		}
