@@ -213,13 +213,13 @@ def single_run(test_dir, message_server, single_run_parameters, max_cores):
 		for i in xrange(total_number_jobs):
 			for j in xrange(number_cores):
 
-				print '%04d/%04d, ' % (
+				print '%04d/%04d' % (
 					task_count,
-					total_number_jobs),
+					total_number_jobs)
 
 				task_count += 1
 
-				sleep_time 	= 0.01
+				sleep_time 	= 1
 				task 		= (sleep_time, run_dir)
 				
 				# Pickle task to upload to task_queue
@@ -246,8 +246,6 @@ def single_run(test_dir, message_server, single_run_parameters, max_cores):
 
 				if total_number_jobs <= task_count:
 					break
-
-			sys.stdout.flush()
 
 			# Waits until all tasks are completed
 			begin_time = time.time()
