@@ -5,6 +5,7 @@ import os
 import pickle
 import pika
 import random
+import sys
 
 from math import pow
 
@@ -19,19 +20,33 @@ from dataIO import append_csv
 from pipeline import Pipeline
 
 
+#######################################################################
+#
+# 	pop_remaining Function
+#
+# 	decreases the remaining
+#
 def pop_remaining(channel, remaining_queue):
 
-	url = os.environ.get('CLOUDAMQP_URL', 'amqp://guest:guest@localhost/%2f')
-	params = pika.URLParameters(url)
-	params.socket_timeout = 5
-	connection = pika.BlockingConnection(params) # Connect to CloudAMQP	
+	result = channel.basic_get(remaining_queue)
 
-	method_frame, header_frame, body = channel.basic_get(remaining_queue)
-	if method_frame:
-	    # print method_frame, header_frame, body
-	    channel.basic_ack(method_frame.delivery_tag)
+	if result:
+		method_frame, header_frame, body = result
+		if method_frame:
+			channel.basic_ack(method_frame.delivery_tag)
 	else:
-	    print ' [x] No message returned'
+		print ' [x] No message returned'
+
+
+#######################################################################
+#
+# 	single_run Function
+#
+# 	Does a single test with the current parameteres
+#
+def get_queue_depth(ch, queue_name):
+
+	return ch.queue_declare(queue=queue_name, passive=True).method.message_count
 
 
 #######################################################################
@@ -79,8 +94,10 @@ def worker_sleeps(ch, method, properties, body):
 	# Write results into json file
 	write_json(worker_dir + '/results.json', results)
 
+	# Send confirmation that message was processed
 	ch.basic_ack(delivery_tag=method.delivery_tag)
 
+	# Decrease count of count_queue
 	pop_remaining(ch, count_queue)
 
 
@@ -90,9 +107,8 @@ def worker_sleeps(ch, method, properties, body):
 #
 # 	hire process that executes tasks
 #
-def hire_worker(queue_name):
+def hire_worker(task_queue, count_queue):
 
-	process_name = multiprocessing.current_process().name
 	# Establish connection with the RabbitMQ server
 	url = os.environ.get('CLOUDAMQP_URL', 'amqp://guest:guest@localhost/%2f')
 	params = pika.URLParameters(url)
@@ -100,31 +116,20 @@ def hire_worker(queue_name):
 	connection = pika.BlockingConnection(params) # Connect to CloudAMQP
 	channel = connection.channel()
 
-	channel.queue_declare(queue=queue_name, durable=True)
+	channel.queue_declare(queue=task_queue, durable=True)
 
 	# Sets maximum number of pre-assigned tasks to 1
 	channel.basic_qos(prefetch_count=1)
-
 	channel.basic_consume(worker_sleeps,
-						  queue=queue_name)
-
-	print(' [x] %s Waiting for messages. To exit press CTRL+C' % process_name)
-
+						  queue=task_queue)
+	
+	process_name = multiprocessing.current_process().name
+	print(' [s] %s Waiting for messages. To exit press CTRL+C' % process_name)
+	
 	try:
 		channel.start_consuming()
 	except KeyboardInterrupt:
 		connection.close()
-
-
-#######################################################################
-#
-# 	single_run Function
-#
-# 	Does a single test with the current parameteres
-#
-def get_queue_depth(ch, queue_name):
-
-	return ch.queue_declare(queue=queue_name, passive=True).method.message_count
 
 
 #######################################################################
@@ -149,7 +154,7 @@ def single_run(test_dir, message_server, single_run_parameters, max_cores):
 	# Check that parameters are valid
 	if NUMBER_CORES > max_cores or NUMBER_CORES < 0:
 		print ' [x] Error: Number of cores is not valid'
-		return
+		return ' [x] Error: Number of cores is not valid'
 
 	run_dir = get_single_run_dir(test_dir)
 
@@ -161,7 +166,7 @@ def single_run(test_dir, message_server, single_run_parameters, max_cores):
 
 	# Injects each tasks into a function asynchronously
 	for worker in xrange(workers):
-		pool.apply_async(hire_worker,[task_queue])
+		pool.apply_async(hire_worker,[task_queue, count_queue])
 		print ' [x] Worker #%02d hired' % worker
 	
 	'''
@@ -189,8 +194,13 @@ def single_run(test_dir, message_server, single_run_parameters, max_cores):
 	# Declare queue to be used to count number of remaining running jobs
 	channel.queue_declare(queue=count_queue)
 
+	# Refresh queues
+	channel.queue_purge(queue=count_queue)
+	channel.queue_purge(queue=task_queue)
+
 	try:
 
+		print ' [s] tasks completed:\n',
 		'''
 		This loop iterates through the tasks 
 		and loads a task into the task_queue
@@ -201,18 +211,18 @@ def single_run(test_dir, message_server, single_run_parameters, max_cores):
 		'''
 		task_count = 0
 		for i in xrange(total_number_jobs):
-
 			for j in xrange(number_cores):
 
-				print ' [x] tasks remaining %s %d' % (
-					40*'.', total_number_jobs - task_count)
+				print '%04d/%04d, ' % (
+					task_count,
+					total_number_jobs),
 
 				task_count += 1
 
-				sleep_time 	= 1
+				sleep_time 	= 0.01
 				task 		= (sleep_time, run_dir)
 				
-				# Pickle task
+				# Pickle task to upload to task_queue
 				pickled_task = pickle.dumps(
 					{'data': task,
 					 'count_queue' : count_queue
@@ -226,7 +236,7 @@ def single_run(test_dir, message_server, single_run_parameters, max_cores):
 						delivery_mode = 2, # make message persistent
 					  ))
 
-				# Increase number of items in queue
+				# count_queue counts the number of tasks assigned and not completed
 				channel.basic_publish(exchange='',
 					  routing_key=count_queue,
 					  body='',
@@ -237,38 +247,45 @@ def single_run(test_dir, message_server, single_run_parameters, max_cores):
 				if total_number_jobs <= task_count:
 					break
 
-			begin_time = time.time()
+			sys.stdout.flush()
 
 			# Waits until all tasks are completed
-			while get_queue_depth(channel, task_queue) + get_queue_depth(channel, count_queue) > 0:
-				# print "task_queue length: %d\ncount_queue length:%d" % (get_queue_depth(channel, task_queue), get_queue_depth(channel, count_queue))
-				time.sleep(0.1)
+			begin_time = time.time()
+			while (get_queue_depth(channel, task_queue) + get_queue_depth(channel, count_queue)) > 0:
 
 				"""
 				#FIXME
 				Check if queue is timing out. If it is, 
 				then purge queues and go to next experiment
 				"""
-				sleep_time = 1
+
+				# print ' [x] Queues (%s, %s) has (%d, %d) items' % (
+				# 	task_queue, 
+				# 	count_queue,
+				# 	get_queue_depth(channel, task_queue), 
+				# 	get_queue_depth(channel, count_queue))
+
 				end_time = time.time()
+				time.sleep(0.5)
 				if end_time - begin_time >= 60:
 					print ' [x] Exiting due to queue timeout'
 					print ' [x] in run with %d number cores and %d total number of jobs' % (number_cores, total_number_jobs)
-					print ' [x] \nQueues (%s, %s) purging with (%d, %d) items in queue' % (
+					print ' [x] \nQueues (%s, %s) purging with (%d, %d) items' % (
 						task_queue, 
 						count_queue,
 						get_queue_depth(channel, task_queue), 
 						get_queue_depth(channel, count_queue))
+
+					# Reset queues
 					channel.queue_purge(queue=count_queue)
 					channel.queue_purge(queue=task_queue)
-					# channel.queue_delete(queue=count_queue)
-					# channel.queue_delete(queue=task_queue)
+
+					# Close connection and 
 					connection.close()
 					pool.terminate()
 					pool.join()
 					
-					return 'Error: Queue Timeout Error'
-
+					return ' [x] Error: Queue Timeout Error'
 
 			if total_number_jobs <= task_count:
 				break
@@ -277,7 +294,7 @@ def single_run(test_dir, message_server, single_run_parameters, max_cores):
 
 		print ' [x] Exiting due to KeyboardInterrupt exception'
 		print ' [x] in run with %d number cores and %d total number of jobs' % (number_cores, total_number_jobs)
-		print ' [x] \nQueues (%s, %s) purging with (%d, %d) items in queue' % (
+		print ' [x] Queues (%s, %s) purging with (%d, %d) items in queue' % (
 			task_queue, 
 			count_queue,
 			get_queue_depth(channel, task_queue), 
@@ -291,7 +308,7 @@ def single_run(test_dir, message_server, single_run_parameters, max_cores):
 		pool.terminate()
 		pool.join()
 
-		return 'Error: KeyboardInterrupt'
+		return ' [x] Error: KeyboardInterrupt'
 
 	connection.close()
 	pool.terminate()
@@ -307,7 +324,7 @@ def single_run(test_dir, message_server, single_run_parameters, max_cores):
 #
 def weak_scale_run(test_dir, message_server, weak_scale_parameters, max_cores):
 
-	print ' [x] Starting Weak Scale Run:\n'
+	print ' [ws] Starting Weak Scale Run:\n'
 
 	BEGIN_NUMBER_CORES 	= weak_scale_parameters['begin_number_cores']
 	END_NUMBER_CORES 	= weak_scale_parameters['end_number_cores'] + 1
@@ -331,15 +348,10 @@ def weak_scale_run(test_dir, message_server, weak_scale_parameters, max_cores):
 	header = ['Test Directory', '2 ^ Number of Cores', '2 ^ Jobs per Cores', 'Run Time']
 	append_csv(csv_file, header)
 
-	# Vary the number of cores
-	for number_cores in xrange(BEGIN_NUMBER_CORES, END_NUMBER_CORES):
+	for number_cores in xrange(BEGIN_NUMBER_CORES, END_NUMBER_CORES): 			# Vary the number of cores
+		for jobs_per_core in xrange(BEGIN_JOBS_PER_CORE, END_JOBS_PER_CORE):	# Vary the number of jobs per core
 
-		print ' [x] Running weak scale with %d cores' % pow(2, number_cores)
-		
-		# Vary the number of jobs per core
-		for jobs_per_core in xrange(BEGIN_JOBS_PER_CORE, END_JOBS_PER_CORE):
-
-			print '\t [x] Running weak scale with %d jobs per core' % pow(2,  jobs_per_core)
+			print '\n [ws] Running weak scale with %d cores and %d jobs per core' % (pow(2, number_cores), pow(2,  jobs_per_core))
 
 			single_run_parameters = dict()
 
@@ -379,7 +391,7 @@ def weak_scale_run(test_dir, message_server, weak_scale_parameters, max_cores):
 #
 def strong_scale_run(test_dir, message_server, strong_scale_parameters, max_cores):
 
-	print 'Starting Strong Scale Run:\n'
+	print '[ss] Starting Strong Scale Run:\n'
 
 	BEGIN_NUMBER_JOBS 	= strong_scale_parameters['begin_number_jobs']
 	END_NUMBER_JOBS 	= strong_scale_parameters['end_number_jobs']+1
@@ -394,13 +406,13 @@ def strong_scale_run(test_dir, message_server, strong_scale_parameters, max_core
 
 	# Check that parameters are valid
 	if BEGIN_NUMBER_JOBS > END_NUMBER_JOBS or BEGIN_NUMBER_JOBS < 0:
-		print ' [x] Error: bounds on cores are not valid.'
+		print ' [ss] Error: bounds on cores are not valid.'
 		return
 	elif BEGIN_NUMBER_CORES > END_NUMBER_CORES or BEGIN_NUMBER_CORES < 0:
-		print ' [x] Error: number_cores are not valid.'
+		print ' [ss] Error: number_cores are not valid.'
 		return
 	elif END_NUMBER_CORES > max_cores:
-		print ' [x] Error: cores exceed max_cores.'
+		print ' [ss] Error: cores exceed max_cores.'
 		return
 
 	strong_scale_test_dir = get_strong_scale_test_dir(test_dir)
@@ -409,15 +421,10 @@ def strong_scale_run(test_dir, message_server, strong_scale_parameters, max_core
 	header = ['Test Directory', '2 ^ Number of Jobs', '2 ^ Number of Cores', 'Run Time']
 	append_csv(csv_file, header)
 
-	# Vary the number of jobs
-	for number_jobs in xrange(BEGIN_NUMBER_JOBS, END_NUMBER_JOBS):
+	for number_jobs in xrange(BEGIN_NUMBER_JOBS, END_NUMBER_JOBS):			# Vary the number of jobs
+		for number_cores in xrange(BEGIN_NUMBER_CORES, END_NUMBER_CORES):	# Vary the number of cores
 
-		print ' [x] Running strong scale with %d jobs' % pow(2, number_jobs)
-		
-		# Vary the number of cores
-		for number_cores in xrange(BEGIN_NUMBER_CORES, END_NUMBER_CORES):
-
-			print '\t [x] Running strong scale with %d cores' % pow(2,  number_cores)
+			print '\n [ss] Running strong scale with %d jobsand %d cores' % (pow(2, number_jobs), pow(2,  number_cores))
 
 			single_run_parameters = dict()
 

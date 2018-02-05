@@ -13,7 +13,6 @@ from multiprocess import single_run
 def main():
 
     # Read in the parameters.json file
-    # parameters_path     = os.path.join(os.path.abspath(__file__), '..', '/data/input/parameters.json')
     parameters_path     = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/data/input/parameters.json'
     print parameters_path
     input_file          = read_json(parameters_path)
