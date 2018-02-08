@@ -14,7 +14,6 @@ def main():
 
     # Read in the parameters.json file
     parameters_path     = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/data/input/parameters.json'
-    print parameters_path
     input_file          = read_json(parameters_path)
 
     # Acquire machine name for the correct parameters
@@ -26,7 +25,6 @@ def main():
     os.environ['CLOUDAMQP_URL'] = message_server['server_url']
 
     # Acquire machine and test parameters
-
     # output_dir            : directory for the output
     output_dir              = parameters['output']
     # single_test_parameters: single test

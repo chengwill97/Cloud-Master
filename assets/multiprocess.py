@@ -9,6 +9,9 @@ import sys
 
 from math import pow
 
+from communication import pop_remaining
+from communication import Communication
+
 from nodes import SimulationNode
 from nodes import AnalysisNode
 from nodes import ConvergenceNode
@@ -19,34 +22,6 @@ from dataIO import append_csv
 
 from pipeline import Pipeline
 
-
-#######################################################################
-#
-# 	pop_remaining Function
-#
-# 	decreases the remaining
-#
-def pop_remaining(channel, remaining_queue):
-
-	result = channel.basic_get(remaining_queue)
-
-	if result:
-		method_frame, header_frame, body = result
-		if method_frame:
-			channel.basic_ack(method_frame.delivery_tag)
-	else:
-		print ' [x] No message returned'
-
-
-#######################################################################
-#
-# 	single_run Function
-#
-# 	Does a single test with the current parameteres
-#
-def get_queue_depth(ch, queue_name):
-
-	return ch.queue_declare(queue=queue_name, passive=True).method.message_count
 
 
 #######################################################################
@@ -110,26 +85,22 @@ def worker_sleeps(ch, method, properties, body):
 def hire_worker(task_queue, count_queue):
 
 	# Establish connection with the RabbitMQ server
-	url = os.environ.get('CLOUDAMQP_URL', 'amqp://guest:guest@localhost/%2f')
-	params = pika.URLParameters(url)
-	params.socket_timeout = 5
-	connection = pika.BlockingConnection(params) # Connect to CloudAMQP
-	channel = connection.channel()
+	worker_com = Communication()
 
-	channel.queue_declare(queue=task_queue, durable=True)
+	worker_com.channel.queue_declare(queue=task_queue, durable=True)
 
 	# Sets maximum number of pre-assigned tasks to 1
-	channel.basic_qos(prefetch_count=1)
-	channel.basic_consume(worker_sleeps,
+	worker_com.channel.basic_qos(prefetch_count=1)
+	worker_com.channel.basic_consume(worker_sleeps,
 						  queue=task_queue)
 	
 	process_name = multiprocessing.current_process().name
 	print(' [s] %s Waiting for messages. To exit press CTRL+C' % process_name)
 	
 	try:
-		channel.start_consuming()
+		worker_com.channel.start_consuming()
 	except KeyboardInterrupt:
-		connection.close()
+		worker_com.connection.close()
 
 
 #######################################################################
@@ -174,30 +145,14 @@ def single_run(test_dir, message_server, single_run_parameters, max_cores):
 	on the / virtual host using the username "guest" and password "guest"
 	and establish a connection with RabbitMQ server
 	'''
-	url = os.environ.get('CLOUDAMQP_URL', 'amqp://guest:guest@localhost/%2f')
-	params = pika.URLParameters(url)
-	params.socket_timeout = 5
-	connection = pika.BlockingConnection(params) # Connect to CloudAMQP
+	
+	manager_com = Communication()
+	connection = manager_com.connection
+	channel = manager_com.channel
 
-	# credentials = pika.PlainCredentials('cloud_user', 'cloud_password')
-	# connection_parameters = pika.ConnectionParameters(server,
-	#                                        5672,
-	#                                        '/',
-	#                                        credentials)
-	# connection = pika.BlockingConnection(connection_parameters)
-
-	channel = connection.channel()
-
-	# Declare queue to be used in the input transfer process
-	channel.queue_declare(queue=task_queue, durable=True)
-
-	# Declare queue to be used to count number of remaining running jobs
-	channel.queue_declare(queue=count_queue)
-
-	# Refresh queues
-	channel.queue_purge(queue=count_queue)
-	channel.queue_purge(queue=task_queue)
-
+	manager_com.queue_start(queue_name=task_queue, durable=True, purge=True)
+	manager_com.queue_start(queue_name=count_queue, durable=False, purge=True)
+	
 	try:
 
 		print ' [s] tasks completed:\n',
@@ -216,10 +171,10 @@ def single_run(test_dir, message_server, single_run_parameters, max_cores):
 				print '%04d/%04d' % (
 					task_count,
 					total_number_jobs)
-
+				
 				task_count += 1
 
-				sleep_time 	= 1
+				sleep_time 	= 0
 				task 		= (sleep_time, run_dir)
 				
 				# Pickle task to upload to task_queue
@@ -229,7 +184,7 @@ def single_run(test_dir, message_server, single_run_parameters, max_cores):
 					})
 
 				# Upload task parameters to queue
-				channel.basic_publish(exchange='',
+				manager_com.channel.basic_publish(exchange='',
 					  routing_key=task_queue,
 					  body=pickled_task,
 					  properties=pika.BasicProperties(
@@ -237,7 +192,7 @@ def single_run(test_dir, message_server, single_run_parameters, max_cores):
 					  ))
 
 				# count_queue counts the number of tasks assigned and not completed
-				channel.basic_publish(exchange='',
+				manager_com.channel.basic_publish(exchange='',
 					  routing_key=count_queue,
 					  body='',
 					  properties=pika.BasicProperties(
@@ -249,37 +204,21 @@ def single_run(test_dir, message_server, single_run_parameters, max_cores):
 
 			# Waits until all tasks are completed
 			begin_time = time.time()
-			while (get_queue_depth(channel, task_queue) + get_queue_depth(channel, count_queue)) > 0:
-
-				"""
-				#FIXME
-				Check if queue is timing out. If it is, 
-				then purge queues and go to next experiment
-				"""
-
-				# print ' [x] Queues (%s, %s) has (%d, %d) items' % (
-				# 	task_queue, 
-				# 	count_queue,
-				# 	get_queue_depth(channel, task_queue), 
-				# 	get_queue_depth(channel, count_queue))
+			while sum(manager_com.queue_depth([task_queue, count_queue])) > 0:
 
 				end_time = time.time()
-				time.sleep(0.5)
 				if end_time - begin_time >= 60:
+
+					message_counts = manager_com.queue_depth([task_queue, count_queue])
 					print ' [x] Exiting due to queue timeout'
 					print ' [x] in run with %d number cores and %d total number of jobs' % (number_cores, total_number_jobs)
-					print ' [x] \nQueues (%s, %s) purging with (%d, %d) items' % (
-						task_queue, 
-						count_queue,
-						get_queue_depth(channel, task_queue), 
-						get_queue_depth(channel, count_queue))
 
-					# Reset queues
-					channel.queue_purge(queue=count_queue)
-					channel.queue_purge(queue=task_queue)
+					manager_com.print_queue_info()
 
-					# Close connection and 
-					connection.close()
+					manager_com.purge_all_queues()
+
+					# Close connection
+					manager_com.connection.close()
 					pool.terminate()
 					pool.join()
 					
@@ -292,23 +231,20 @@ def single_run(test_dir, message_server, single_run_parameters, max_cores):
 
 		print ' [x] Exiting due to KeyboardInterrupt exception'
 		print ' [x] in run with %d number cores and %d total number of jobs' % (number_cores, total_number_jobs)
-		print ' [x] Queues (%s, %s) purging with (%d, %d) items in queue' % (
-			task_queue, 
-			count_queue,
-			get_queue_depth(channel, task_queue), 
-			get_queue_depth(channel, count_queue))
 
-		# Reset queues
-		channel.queue_purge(queue=count_queue)
-		channel.queue_purge(queue=task_queue)
+		# Print queue and corresponding message counts
+		manager_com.print_queue_info()
 
-		connection.close()
+		# Purge queues
+		manager_com.purge_all_queues()
+
+		manager_com.connection.close()
 		pool.terminate()
 		pool.join()
 
 		return ' [x] Error: KeyboardInterrupt'
 
-	connection.close()
+	manager_com.connection.close()
 	pool.terminate()
 	pool.join()		
 	return run_dir
