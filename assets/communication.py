@@ -18,7 +18,12 @@ def pop_remaining(channel, remaining_queue):
 	else:
 		print ' [x] No message returned'
 
-
+#######################################################################
+#
+# 	Communication class takes care of administering the communication
+#	with the RabbitMQ server
+#
+#
 class Communication:
 
 	def __init__(self):
@@ -70,6 +75,7 @@ class Communication:
 			exit(0)
 
 
+	# Print queue name and corresponding message count
 	def print_queue_info(self):
 
 		message_counts = self.queue_depth(self.queues)
@@ -82,10 +88,11 @@ class Communication:
 
 		return
 
+
+	# Purge all queues created through this channel
 	def purge_all_queues(self):
 
 		for queue in self.queues: 
 			self.channel.queue_purge(queue=queue)
 
 		return
-

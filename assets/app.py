@@ -67,8 +67,8 @@ def main():
         if strong_scale_parameters['run_test']:
             strong_scale_run(test_dir, message_server, strong_scale_parameters, max_cores)
 
-    print ' [x] %s finished...' % (test_dir)
-    print ' [x] Exiting gracefully'
+    print ' [f] %s finished...' % (test_dir)
+    print ' [f] Exiting gracefully'
 
 
 if __name__ == '__main__':

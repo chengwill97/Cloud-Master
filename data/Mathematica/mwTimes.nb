@@ -10,10 +10,10 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       158,          7]
-NotebookDataLength[   1922696,      32466]
-NotebookOptionsPosition[   1919705,      32370]
-NotebookOutlinePosition[   1920080,      32387]
-CellTagsIndexPosition[   1920037,      32384]
+NotebookDataLength[   1920185,      32408]
+NotebookOptionsPosition[   1917031,      32308]
+NotebookOutlinePosition[   1917406,      32325]
+CellTagsIndexPosition[   1917363,      32322]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
@@ -996,12 +996,10 @@ Cell[TextData[StyleBox["Comet Weak Scale Plot",
 Cell[CellGroupData[{
 
 Cell[BoxData[{
- RowBox[{
-  RowBox[{
-  "file", "=", 
-   "\"\</Users/WillC/Documents/Rutgers/Research/RADICAL/Cloud-Master/data/\
-output/Comet_test_001/weak_scale_output/data.csv\>\""}], 
-  ";"}], "\[IndentingNewLine]", 
+ RowBox[{"file", "=", 
+  "\"\</Users/WillC/Documents/Rutgers/Research/RADICAL/Cloud-Master/data/\
+output/Comet_test_003/weak_scale_output/data.csv\>\""}], \
+"\[IndentingNewLine]", 
  RowBox[{
   RowBox[{"rawdata", "=", " ", 
    RowBox[{"Import", "[", "file", "]"}]}], ";"}], "\[IndentingNewLine]", 
@@ -1019,133 +1017,73 @@ output/Comet_test_001/weak_scale_output/data.csv\>\""}],
  CellChangeTimes->{
   3.7270967229636507`*^9, 3.727096835061357*^9, {3.727096874092577*^9, 
    3.727096930198134*^9}, 3.727097212197318*^9, {3.727097321882895*^9, 
-   3.7270973248240137`*^9}}],
+   3.7270973248240137`*^9}, {3.727118008386147*^9, 3.727118026602227*^9}}],
 
-Cell[BoxData[
- RowBox[{"{", 
-  RowBox[{"\<\"2 ^ Number of Cores\"\>", ",", "\<\"2 ^ Jobs per Cores\"\>", 
-   ",", "\<\"Run Time\"\>"}], "}"}]], "Output",
+Cell[BoxData["\<\"/Users/WillC/Documents/Rutgers/Research/RADICAL/Cloud-\
+Master/data/output/Comet_test_003/weak_scale_output/data.csv\"\>"], "Output",
  CellChangeTimes->{
   3.727096930502462*^9, {3.7270972067472363`*^9, 3.7270972125460043`*^9}, {
-   3.727097322823327*^9, 3.727097325147728*^9}, 3.727103267168544*^9}],
+   3.727097322823327*^9, 3.727097325147728*^9}, 3.727103267168544*^9, {
+   3.7271180110265503`*^9, 3.727118026880332*^9}}],
 
 Cell[BoxData[
- RowBox[{"{", 
+ RowBox[{
+  StyleBox[
+   RowBox[{"Import", "::", "nffil"}], "MessageName"], 
   RowBox[{
-   RowBox[{"{", 
-    RowBox[{"1.`", ",", "1.`", ",", "4.339691162109375`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"1.`", ",", "2.`", ",", "7.7497398853302`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"1.`", ",", "4.`", ",", "14.562694787979126`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"1.`", ",", "8.`", ",", "27.774155855178833`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"1.`", ",", "16.`", ",", "58.19509482383728`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"1.`", ",", "32.`", ",", "112.43204188346863`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"1.`", ",", "64.`", ",", "215.87593913078308`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"1.`", ",", "128.`", ",", "434.5148069858551`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"1.`", ",", "256.`", ",", "869.5569808483124`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"1.`", ",", "512.`", ",", "1752.2110350131989`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"1.`", ",", "1024.`", ",", "3455.9746520519257`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"2.`", ",", "1.`", ",", "4.443163156509399`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"2.`", ",", "2.`", ",", "7.951560020446777`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"2.`", ",", "4.`", ",", "14.964558124542236`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"2.`", ",", "8.`", ",", "28.956964015960693`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"2.`", ",", "16.`", ",", "55.5301878452301`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"2.`", ",", "32.`", ",", "110.9218738079071`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"2.`", ",", "64.`", ",", "222.6860899925232`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"2.`", ",", "128.`", ",", "448.3820629119873`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"2.`", ",", "256.`", ",", "888.0258748531342`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"2.`", ",", "512.`", ",", "1762.1081039905548`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"2.`", ",", "1024.`", ",", "3563.4698979854584`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"4.`", ",", "1.`", ",", "4.457889080047607`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"4.`", ",", "2.`", ",", "7.847567796707153`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"4.`", ",", "4.`", ",", "14.660599946975708`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"4.`", ",", "8.`", ",", "28.59128713607788`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"4.`", ",", "16.`", ",", "55.923561096191406`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"4.`", ",", "32.`", ",", "112.1489360332489`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"4.`", ",", "64.`", ",", "222.33822393417358`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"4.`", ",", "128.`", ",", "444.4985730648041`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"4.`", ",", "256.`", ",", "890.8850739002228`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"4.`", ",", "512.`", ",", "1792.678258895874`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"4.`", ",", "1024.`", ",", "3539.923169851303`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"8.`", ",", "1.`", ",", "4.662595987319946`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"8.`", ",", "2.`", ",", "7.760864973068237`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"8.`", ",", "4.`", ",", "14.553668975830078`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"8.`", ",", "8.`", ",", "28.472137928009033`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"8.`", ",", "16.`", ",", "55.94219779968262`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"8.`", ",", "32.`", ",", "112.44222378730774`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"8.`", ",", "64.`", ",", "225.13365292549133`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"8.`", ",", "128.`", ",", "446.20852398872375`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"8.`", ",", "256.`", ",", "894.7094569206238`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"8.`", ",", "512.`", ",", "1780.6813490390778`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"8.`", ",", "1024.`", ",", "3533.0135900974274`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"16.`", ",", "1.`", ",", "4.359321117401123`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"16.`", ",", "2.`", ",", "7.8525519371032715`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"16.`", ",", "4.`", ",", "14.771774053573608`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"16.`", ",", "8.`", ",", "28.420314073562622`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"16.`", ",", "16.`", ",", "57.08130097389221`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"16.`", ",", "32.`", ",", "111.8813488483429`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"16.`", ",", "64.`", ",", "224.05469489097595`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"16.`", ",", "128.`", ",", "446.64100098609924`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"16.`", ",", "256.`", ",", "877.5417211055756`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"16.`", ",", "512.`", ",", "1768.3391530513763`"}], "}"}], ",", 
-   RowBox[{"{", 
-    RowBox[{"16.`", ",", "1024.`", ",", "3589.4149379730225`"}], "}"}]}], 
-  "}"}]], "Output",
+  ":", " "}], "\<\"File not found during \
+\[NoBreak]\\!\\(\\*RowBox[{\\\"Import\\\"}]\\)\[NoBreak]. \\!\\(\\*ButtonBox[\
+\\\"\[RightSkeleton]\\\", ButtonStyle->\\\"Link\\\", ButtonFrame->None, \
+ButtonData:>\\\"paclet:ref/message/Import/nffil\\\", ButtonNote -> \
+\\\"Import::nffil\\\"]\\)\"\>"}]], "Message", "MSG",
+ CellChangeTimes->{{3.727118010906989*^9, 3.727118026985813*^9}}],
+
+Cell[BoxData[
+ RowBox[{
+  StyleBox[
+   RowBox[{"Part", "::", "partd"}], "MessageName"], 
+  RowBox[{
+  ":", " "}], "\<\"Part specification \
+\[NoBreak]\\!\\(\\*RowBox[{\\\"$Failed\\\", \\\"\[LeftDoubleBracket]\\\", \
+RowBox[{\\\"1\\\", \\\",\\\", RowBox[{\\\"2\\\", \\\";;\\\", \\\"All\\\"}]}], \
+\\\"\[RightDoubleBracket]\\\"}]\\)\[NoBreak] is longer than depth of object. \
+\\!\\(\\*ButtonBox[\\\"\[RightSkeleton]\\\", ButtonStyle->\\\"Link\\\", \
+ButtonFrame->None, ButtonData:>\\\"paclet:ref/message/General/partd\\\", \
+ButtonNote -> \\\"Part::partd\\\"]\\)\"\>"}]], "Message", "MSG",
+ CellChangeTimes->{{3.727118010906989*^9, 3.727118026995331*^9}}],
+
+Cell[BoxData[
+ RowBox[{"$Failed", "\[LeftDoubleBracket]", 
+  RowBox[{"1", ",", 
+   RowBox[{"2", ";;", "All"}]}], "\[RightDoubleBracket]"}]], "Output",
  CellChangeTimes->{
   3.727096930502462*^9, {3.7270972067472363`*^9, 3.7270972125460043`*^9}, {
-   3.727097322823327*^9, 3.727097325147728*^9}, 3.7271032671820583`*^9}]
+   3.727097322823327*^9, 3.727097325147728*^9}, 3.727103267168544*^9, {
+   3.7271180110265503`*^9, 3.727118027005402*^9}}],
+
+Cell[BoxData[
+ RowBox[{
+  StyleBox[
+   RowBox[{"Part", "::", "take"}], "MessageName"], 
+  RowBox[{
+  ":", " "}], "\<\"Cannot take positions \
+\[NoBreak]\\!\\(\\*RowBox[{\\\"2\\\"}]\\)\[NoBreak] through \
+\[NoBreak]\\!\\(\\*RowBox[{\\\"-\\\", \\\"1\\\"}]\\)\[NoBreak] in \
+\[NoBreak]\\!\\(\\*RowBox[{\\\"$Failed\\\"}]\\)\[NoBreak]. \
+\\!\\(\\*ButtonBox[\\\"\[RightSkeleton]\\\", ButtonStyle->\\\"Link\\\", \
+ButtonFrame->None, ButtonData:>\\\"paclet:ref/message/Part/take\\\", \
+ButtonNote -> \\\"Part::take\\\"]\\)\"\>"}]], "Message", "MSG",
+ CellChangeTimes->{{3.727118010906989*^9, 3.727118027014234*^9}}],
+
+Cell[BoxData[
+ RowBox[{"$Failed", "\[LeftDoubleBracket]", 
+  RowBox[{
+   RowBox[{"2", ";;", "All"}], ",", 
+   RowBox[{"2", ";;", "All"}]}], "\[RightDoubleBracket]"}]], "Output",
+ CellChangeTimes->{
+  3.727096930502462*^9, {3.7270972067472363`*^9, 3.7270972125460043`*^9}, {
+   3.727097322823327*^9, 3.727097325147728*^9}, 3.727103267168544*^9, {
+   3.7271180110265503`*^9, 3.727118027023337*^9}}]
 }, Open  ]],
 
 Cell[TextData[StyleBox["Strong Scale Plots",
@@ -32389,84 +32327,88 @@ Notebook[{
 Cell[CellGroupData[{
 Cell[580, 22, 142, 2, 27, "Subsubsection"],
 Cell[CellGroupData[{
-Cell[747, 28, 1948, 50, 88, "Input"],
-Cell[2698, 80, 8379, 175, 374, "Output"],
-Cell[11080, 257, 667, 10, 23, "Output"],
-Cell[11750, 269, 5616, 120, 88, "Output"]
+Cell[747, 28, 1948, 50, 66, "Input"],
+Cell[2698, 80, 8379, 175, 280, "Output"],
+Cell[11080, 257, 667, 10, 17, "Output"],
+Cell[11750, 269, 5616, 120, 66, "Output"]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[17403, 394, 5691, 147, 205, "Input"],
-Cell[23097, 543, 5862, 147, 66, "Output"],
-Cell[28962, 692, 2284, 59, 36, "Output"],
-Cell[31249, 753, 2282, 57, 36, "Output"],
-Cell[33534, 812, 6177, 172, 66, "Output"]
+Cell[17403, 394, 5691, 147, 153, "Input"],
+Cell[23097, 543, 5862, 147, 49, "Output"],
+Cell[28962, 692, 2284, 59, 27, "Output"],
+Cell[31249, 753, 2282, 57, 27, "Output"],
+Cell[33534, 812, 6177, 172, 49, "Output"]
 }, Closed]]
 }, Closed]],
 Cell[CellGroupData[{
 Cell[39760, 990, 196, 3, 37, "Subsubsection"],
 Cell[CellGroupData[{
-Cell[39981, 997, 874, 24, 62, "Input"],
-Cell[40858, 1023, 320, 6, 23, "Output"],
-Cell[41181, 1031, 5270, 116, 88, "Output"]
+Cell[39981, 997, 897, 22, 62, "Input"],
+Cell[40881, 1021, 370, 5, 23, "Output"],
+Cell[41254, 1028, 485, 10, 18, "Message"],
+Cell[41742, 1040, 654, 12, 18, "Message"],
+Cell[42399, 1054, 369, 7, 23, "Output"],
+Cell[42771, 1063, 607, 12, 18, "Message"],
+Cell[43381, 1077, 396, 8, 23, "Output"]
 }, Open  ]],
-Cell[46466, 1150, 156, 3, 31, "Text"],
+Cell[43792, 1088, 156, 3, 31, "Text"],
 Cell[CellGroupData[{
-Cell[46647, 1157, 1521, 40, 36, "Input"],
-Cell[48171, 1199, 187, 4, 23, "Output"]
+Cell[43973, 1095, 1521, 40, 36, "Input"],
+Cell[45497, 1137, 187, 4, 23, "Output"]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[48395, 1208, 4696, 135, 153, "Input"],
-Cell[53094, 1345, 1080, 25, 36, "Output"],
-Cell[54177, 1372, 999, 24, 23, "Output"]
+Cell[45721, 1146, 4696, 135, 153, "Input"],
+Cell[50420, 1283, 1080, 25, 36, "Output"],
+Cell[51503, 1310, 999, 24, 23, "Output"]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[55213, 1401, 237, 4, 23, "Input"],
-Cell[55453, 1407, 166, 2, 23, "Output"]
+Cell[52539, 1339, 237, 4, 23, "Input"],
+Cell[52779, 1345, 166, 2, 23, "Output"]
 }, Open  ]],
-Cell[55634, 1412, 4694, 103, 335, "Input"],
-Cell[60331, 1517, 211, 5, 23, "Input"],
+Cell[52960, 1350, 4694, 103, 335, "Input"],
+Cell[57657, 1455, 211, 5, 23, "Input"],
 Cell[CellGroupData[{
-Cell[60567, 1526, 190, 4, 23, "Input"],
-Cell[60760, 1532, 586042, 9610, 726, 339595, 5569, "CachedBoxData", \
+Cell[57893, 1464, 190, 4, 23, "Input"],
+Cell[58086, 1470, 586042, 9610, 726, 339595, 5569, "CachedBoxData", \
 "BoxData", "Output"]
 }, Open  ]],
-Cell[646817, 11145, 154, 3, 31, "Text"],
-Cell[646974, 11150, 8539, 201, 231, "Input"],
-Cell[655516, 11353, 5326, 113, 335, "Input"],
-Cell[660845, 11468, 205, 4, 23, "Input"],
+Cell[644143, 11083, 154, 3, 23, "Text"],
+Cell[644300, 11088, 8539, 201, 173, "Input"],
+Cell[652842, 11291, 5326, 113, 251, "Input"],
+Cell[658171, 11406, 205, 4, 17, "Input"],
 Cell[CellGroupData[{
-Cell[661075, 11476, 241, 5, 23, "Input"],
-Cell[661319, 11483, 1232668, 20211, 393, 723664, 11865, "CachedBoxData", \
+Cell[658401, 11414, 241, 5, 17, "Input"],
+Cell[658645, 11421, 1232668, 20211, 294, 723664, 11865, "CachedBoxData", \
 "BoxData", "Output"]
 }, Closed]]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[1894036, 31700, 261, 3, 27, "Subsubsection"],
-Cell[1894300, 31705, 3415, 97, 27, "Input"],
+Cell[1891362, 31638, 261, 3, 20, "Subsubsection"],
+Cell[1891626, 31643, 3415, 97, 20, "Input"],
 Cell[CellGroupData[{
-Cell[1897740, 31806, 1195, 31, 11, "Input"],
-Cell[1898938, 31839, 10590, 271, 63, "Output"]
+Cell[1895066, 31744, 1195, 31, 8, "Input"],
+Cell[1896264, 31777, 10590, 271, 47, "Output"]
 }, Open  ]],
-Cell[1909543, 32113, 1548, 37, 11, "Input"],
-Cell[1911094, 32152, 92, 1, 6, "Input"],
-Cell[1911189, 32155, 419, 10, 11, "Input"],
-Cell[1911611, 32167, 92, 1, 6, "Input"],
-Cell[1911706, 32170, 92, 1, 6, "Input"]
+Cell[1906869, 32051, 1548, 37, 8, "Input"],
+Cell[1908420, 32090, 92, 1, 4, "Input"],
+Cell[1908515, 32093, 419, 10, 8, "Input"],
+Cell[1908937, 32105, 92, 1, 4, "Input"],
+Cell[1909032, 32108, 92, 1, 4, "Input"]
 }, Closed]],
 Cell[CellGroupData[{
-Cell[1911835, 32176, 103, 1, 23, "Subsubsection"],
-Cell[1911941, 32179, 470, 10, 36, "Input"],
+Cell[1909161, 32114, 103, 1, 17, "Subsubsection"],
+Cell[1909267, 32117, 470, 10, 27, "Input"],
 Cell[CellGroupData[{
-Cell[1912436, 32193, 331, 5, 23, "Input"],
-Cell[1912770, 32200, 391, 6, 23, "Output"]
+Cell[1909762, 32131, 331, 5, 17, "Input"],
+Cell[1910096, 32138, 391, 6, 17, "Output"]
 }, Open  ]],
-Cell[1913176, 32209, 261, 6, 23, "Input"],
+Cell[1910502, 32147, 261, 6, 17, "Input"],
 Cell[CellGroupData[{
-Cell[1913462, 32219, 1321, 30, 36, "Input"],
-Cell[1914786, 32251, 627, 11, 23, "Output"],
-Cell[1915416, 32264, 863, 18, 23, "Output"]
+Cell[1910788, 32157, 1321, 30, 27, "Input"],
+Cell[1912112, 32189, 627, 11, 17, "Output"],
+Cell[1912742, 32202, 863, 18, 17, "Output"]
 }, Open  ]],
-Cell[1916294, 32285, 3395, 82, 127, "Input"]
+Cell[1913620, 32223, 3395, 82, 95, "Input"]
 }, Open  ]]
 }
 ]
